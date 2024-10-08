@@ -44,6 +44,8 @@
 	<!--[if lt IE 9]>
 	<script src="js/respond.min.js"></script>
 	<![endif]-->
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3.10.0/dist/email.min.js"></script>
+
 
 	<style>
 		.icon {
@@ -150,6 +152,8 @@
 		
 	<div class="gtco-loader"></div>
 	
+
+	
 	<div id="page">
 	<nav class="gtco-nav" role="navigation">
 		<div class="container">
@@ -162,8 +166,8 @@
 						<li class="active"><a href="#" data-nav-section="home">Home</a></li>
 						<li><a href="#" data-nav-section="about">About</a></li>
 						<li><a href="#" data-nav-section="practice-areas">Projects</a></li>
-						<li><a href="#" data-nav-section="our-team">Contacts</a></li>
 						<li class="btn-cta"><a href="#" data-nav-section="contact"><span>FAQ</span></a></li>
+						<li><a href="#" data-nav-section="our-team">Contacts</a></li>
 						<li class="btn-cta"><a href="#" data-nav-section="user"><span>Sign In</span></a></li>
 						<li class="btn-cta"><a href="#" data-nav-section="user"><span>Sign Up</span></a></li>
 						<li class="btn-cta"><a href="#" data-nav-section="user"><span>Invest</span></a></li>
@@ -205,6 +209,7 @@
 
     <!-- Content -->
     <div class="container">
+			
         <div class="row">
             <div class="col-md-12 col-md-offset-0 text-center">
                 <div class="display-t">
@@ -227,9 +232,13 @@
     </div>
 </section>
 
-	
+<marquee behavior="" direction="" style="background-color: rgb(9, 9, 153); color:white;">
+		
+	Raise or invest skills, labor, materials and cash for your real estate projects
+		</marquee>
 	<section id="gtco-about" data-section="about">
 		<div class="container">
+		
 			<div class="row row-pb-md ">
 				<div class="col-md-8 col-md-offset-2 heading animate-box" data-animate-effect="fadeIn">
 					<h1>About Us</h1>
@@ -238,6 +247,7 @@
 				</div>
 			</div>
 			<div class="row">
+				
 				<div class="col-md-6 col-md-pull-1 animate-box" data-animate-effect="fadeInLeft">
 					<div class="img-shadow">
 						<video autoplay muted loop playsinline class="responsive-video">
@@ -409,11 +419,11 @@
 			<div class="col-md-8 col-md-offset-2 heading animate-box" data-animate-effect="fadeIn">
 			<h1>FAQs</h1>
 			<p class="sub">Some Answered Questions Below</p>
-			<!-- <p class="subtle-text animate-box" data-animate-effect="fadeIn">FAQs</p> -->
+			<p class="subtle-text animate-box"  data-animate-effect="fadeIn">FAQs</p>
 				</div>
 		</div>
-		<section class="container" id="contain">
-			<div class="accordion" id="accordionExample">
+		<section class="container" id="contain" >
+			<div class="accordion animate-box" id="accordionExample">
 				<div class="accordion-item">
 						<h2 class="accordion-header" id="headingOne">
 								<button class="accordion-button" type="button" data-tab="tab1">
@@ -514,31 +524,31 @@
 			</div>
 			<div class="row">
 				<div class="col-md-6 col-md-push-6 animate-box">
-					<form action="#">
-						<div class="form-group">
-							<label for="name" class="sr-only">Name</label>
-							<input type="text" class="form-control" placeholder="Name" id="name">
-						</div>
-						<div class="form-group">
-							<label for="email" class="sr-only">Email</label>
-							<input type="text" class="form-control" placeholder="Email" id="email">
-						</div>
-						<div class="form-group">
-							<label for="message" class="sr-only">Message</label>
-							<textarea name="message" id="message" class="form-control" cols="30" rows="7" placeholder="Message"></textarea>
-						</div>
-						<div class="form-group">
-							<input type="submit" value="Send Message" class="btn btn-primary">
-						</div>
+					<form id="contact-form" onsubmit="sendEmail(event)">
+							<div class="form-group">
+									<label for="name" class="sr-only">Name</label>
+									<input type="text" class="form-control" placeholder="Name" id="name" required>
+							</div>
+							<div class="form-group">
+									<label for="email" class="sr-only">Email</label>
+									<input type="email" class="form-control" placeholder="Email" id="email" required>
+							</div>
+							<div class="form-group">
+									<label for="message" class="sr-only">Message</label>
+									<textarea name="message" id="message" class="form-control" cols="30" rows="7" placeholder="Message" required></textarea>
+							</div>
+							<div class="form-group">
+									<input type="submit" value="Send Message" class="btn btn-primary">
+							</div>
 					</form>
-				</div>
+			</div>
 				<div class="col-md-4 col-md-pull-6 animate-box">
 					<div class="gtco-contact-info">
 						<ul>
-							<li class="address">198 West 21th Street, Suite 721 New York NY 10016</li>
-							<li class="phone"><a href="tel://1235235598">+ 1235 2355 98</a></li>
-							<li class="email"><a href="mailto:info@yoursite.com">info@example.com</a></li>
-							<li class="url"><a href="#">http://example.com</a></li>
+							<li class="address">24, Valley View Closed, Valley Estate, Idi Mangoro, Ikeja, Lagos, Nigeria.</li>
+							<li class="phone"><a href="tel://+234 803 711 0870">+234 803 711 0870</a></li>
+							<li class="email"><a href="mailto:Officialcobuild@gmail.com">Officialcobuild@gmail.com</a></li>
+							<!-- <li class="url"><a href="#">http://example.com</a></li> -->
 						</ul>
 					</div>
 				</div>
@@ -552,15 +562,15 @@
 			<div class="row copyright">
 				<div class="col-md-12">
 					<p class="pull-left">
-						<small class="block">&copy; Cobuild <span id="year"></span></small>
+						<small class="block">&copy; Cobuild <span id="year"></span>. all right reserved <a href="https://bgwfoundation.org/" target="_blank" rel="noopener noreferrer">Bridgewaters</a></small>
 						<small class="block">Designed by <a href="https://github.com/PEACE-DFG" target="_blank">CODEMaster</a></small>
 					</p>
 					<p class="pull-right">
 						<ul class="gtco-social-icons pull-right">
-							<li><a href="#"><i class="icon-twitter"></i></a></li>
-							<li><a href="#"><i class="icon-facebook"></i></a></li>
-							<li><a href="#"><i class="icon-linkedin"></i></a></li>
-							<li><a href="#"><i class="icon-dribbble"></i></a></li>
+							<li><a href="#" target="_blank"><i class="icon-twitter"></i></a></li>
+							<li><a href="https://web.facebook.com/profile.php?id=61551699093735&sk=about_contact_and_basic_info" target="_blank"><i class="icon-facebook"></i></a></li>
+							<li><a href="https://www.linkedin.com/company/100059257/admin/dashboard/" target="_blank"><i class="icon-linkedin"></i></a></li>
+							<li><a href="https://www.instagram.com/official_cobuild/" target="_blank"><i class="icon-instagram"></i></a></li>
 						</ul>
 					</p>
 				</div>
@@ -588,6 +598,8 @@
 	<script src="js/jquery.magnific-popup.min.js"></script>
 	<script src="js/magnific-popup-options.js"></script>
 	<!-- Main -->
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 	<script src="js/main.js"></script>
 	<script>
 		document.addEventListener('DOMContentLoaded', function () {
@@ -661,6 +673,41 @@ document.querySelectorAll('.accordion-button').forEach(button => {
 });
 
 
+//sending email through the contact page
+(function(){
+	emailjs.init("-ueGO7vgxSgl70FOZ"); // Replace with your public key from EmailJS
+})();
+
+function sendEmail(event) {
+	event.preventDefault(); // Prevent form submission
+	
+	const name = document.getElementById('name').value;
+	const email = document.getElementById('email').value;
+	const message = document.getElementById('message').value;
+	
+	emailjs.send("service_3sbhs0f", "template_yabvp9l", {
+			from_name: name,
+			reply_to: email,
+			message: message,
+	})
+	.then(function(response) {
+		// Display success message using SweetAlert
+		Swal.fire({
+				icon: 'success',
+				title: 'Message Sent!',
+				text: 'Your message has been sent successfully.We would get back to you shortly',
+				confirmButtonColor: '#007bff'
+		});
+}, function(error) {
+		// Display error message using SweetAlert
+		Swal.fire({
+				icon: 'error',
+				title: 'Failed to Send!',
+				text: 'Failed to send the message. Please try again later or send a message to the email on the left.',
+				confirmButtonColor: '#007bff'
+		});
+});
+}
 	</script>
 
 	</body>
