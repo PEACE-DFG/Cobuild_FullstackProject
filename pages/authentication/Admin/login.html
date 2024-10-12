@@ -14,6 +14,7 @@
             align-items: center;
             background: linear-gradient(135deg, #b87df6, #0440a9);
             font-family: 'Poppins', sans-serif;
+            overflow: hidden;
         }
 
         .login-container {
@@ -24,28 +25,13 @@
             width: 100%;
             box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);
             position: relative;
-            overflow: hidden;
-        }
-
-        .login-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -150%;
-            width: 200%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.05);
-            transform: rotate(80deg);
+            display: none; /* Initially hide the login container */
         }
 
         .login-container h2 {
             text-align: center;
             color: #333;
             font-weight: bold;
-            margin-bottom: 20px;
-        }
-
-        .login-container form {
             margin-bottom: 20px;
         }
 
@@ -62,8 +48,7 @@
         }
 
         .login-container button {
-          background: linear-gradient(135deg, #b87df6, #0440a9);
-
+            background: linear-gradient(135deg, #b87df6, #0440a9);
             color: white;
             border: none;
             padding: 12px;
@@ -77,18 +62,62 @@
             background-color: #5a0fc7;
         }
 
-        .login-container .footer-text {
+        .footer-text {
             text-align: center;
             color: #555;
         }
 
-        .login-container .footer-text a {
+        .footer-text a {
             color: #6a11cb;
             text-decoration: none;
         }
 
-        .login-container .footer-text a:hover {
+        .footer-text a:hover {
             text-decoration: underline;
+        }
+
+        /* Loader Styles */
+        .loader {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .loader span {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #6a11cb;
+            border-right: 2px solid rgba(106, 17, 203, 0.8);
+            white-space: nowrap;
+            overflow: hidden;
+            width: 0;
+            animation: typing 3s steps(10) forwards, blink 0.75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 8ch; } /* Adjust according to the length of the text "Cobuild" */
+        }
+
+        @keyframes blink {
+            from, to { border-color: transparent; }
+            50% { border-color: rgba(106, 17, 203, 0.8); }
+        }
+
+        /* Hide loader when login form is visible */
+        body.loaded .loader {
+            display: none;
+        }
+
+        body.loaded .login-container {
+            display: block;
         }
 
         /* Add some responsive behavior */
@@ -116,8 +145,14 @@
 </head>
 <body>
 
+    <!-- Loader -->
+    <div class="loader">
+        <span>Cobuild</span>
+    </div>
+
+    <!-- Login Form -->
     <div class="login-container">
-      <img src="../../../images/Cobuild_logo.png" alt="">
+        <img src="../../../images/Cobuild_logo.png" alt="">
         <h2>Admin Login</h2>
         <form action="#" method="POST">
             <div class="mb-3">
@@ -127,8 +162,8 @@
                 <input type="password" class="form-control" placeholder="Enter your password" required>
             </div>
             <div class="mb-3">
-              <input type="text" class="form-control" placeholder="Enter your ID code" required>
-          </div>
+                <input type="text" class="form-control" placeholder="Enter your ID code" required>
+            </div>
             <button type="submit" class="btn btn-primary">Login</button>
         </form>
         <div class="footer-text">
@@ -137,5 +172,14 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Simulate a loading time
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                document.body.classList.add('loaded');
+            }, 3000); // Delay for 3 seconds to display the loader animation
+        });
+    </script>
 </body>
 </html>
