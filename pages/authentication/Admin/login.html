@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login Page</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #b87df6, #0440a9);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .login-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 200%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.05);
+            transform: rotate(80deg);
+        }
+
+        .login-container h2 {
+            text-align: center;
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .login-container form {
+            margin-bottom: 20px;
+        }
+
+        .login-container input {
+            border-radius: 50px;
+            padding: 12px 20px;
+            border: 1px solid #ddd;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .login-container input:focus {
+            border-color: #6a11cb;
+            box-shadow: 0 0 10px rgba(106, 17, 203, 0.3);
+        }
+
+        .login-container button {
+          background: linear-gradient(135deg, #b87df6, #0440a9);
+
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 50px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        .login-container button:hover {
+            background-color: #5a0fc7;
+        }
+
+        .login-container .footer-text {
+            text-align: center;
+            color: #555;
+        }
+
+        .login-container .footer-text a {
+            color: #6a11cb;
+            text-decoration: none;
+        }
+
+        .login-container .footer-text a:hover {
+            text-decoration: underline;
+        }
+
+        /* Add some responsive behavior */
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 30px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .login-container {
+                padding: 20px;
+            }
+
+            .login-container h2 {
+                font-size: 1.5rem;
+            }
+
+            .login-container button {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+      <img src="../../../images/Cobuild_logo.png" alt="">
+        <h2>Admin Login</h2>
+        <form action="#" method="POST">
+            <div class="mb-3">
+                <input type="email" class="form-control" placeholder="Enter your email" required>
+            </div>
+            <div class="mb-3">
+                <input type="password" class="form-control" placeholder="Enter your password" required>
+            </div>
+            <div class="mb-3">
+              <input type="text" class="form-control" placeholder="Enter your ID code" required>
+          </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+        <div class="footer-text">
+            <p>Don't have an account? <a href="register.html">Register here</a></p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

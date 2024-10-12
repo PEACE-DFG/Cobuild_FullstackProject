@@ -52,6 +52,7 @@ a:hover, a:active, a:focus {
 
 p {
   margin-bottom: 30px;
+  color:  #0f1133;
 }
 
 h1, h2, h3, h4, h5, h6, figure {
@@ -275,7 +276,7 @@ h1, h2, h3, h4, h5, h6, figure {
   /* position: relative; */
   height: 100vh;
   overflow: hidden;
-  background: linear-gradient(rgba(3, 6, 102, 0.2),rgba(3, 6, 102, 0.217)),url('../images/back4.jpg'); 
+  background: linear-gradient(rgba(193, 193, 197, 0),rgba(207, 207, 216, 0.01)),url('../images/back4.jpg'); 
   background-size:cover;
   /* background-position:center ; */
   background-repeat: no-repeat;

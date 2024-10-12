@@ -5,7 +5,7 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<title>Cobuild</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
   	<!-- Facebook and Twitter integration -->
 	<meta property="og:title" content=""/>
 	<meta property="og:image" content=""/>
@@ -168,8 +168,21 @@
 						<li><a href="#" data-nav-section="practice-areas">Projects</a></li>
 						<li class="btn-cta"><a href="#" data-nav-section="contact"><span>FAQ</span></a></li>
 						<li><a href="#" data-nav-section="our-team">Contacts</a></li>
-						<li class="btn-cta"><a href="#" data-nav-section="user"><span>Sign In</span></a></li>
-						<li class="btn-cta"><a href="#" data-nav-section="user"><span>Sign Up</span></a></li>
+						<li class="btn-cta" id="signInButton"><a href="#"><span>Sign In</span></a></li>
+<li class="btn-cta" id="signUpButton"><a href="#"><span>Sign Up</span></a></li>
+
+<script>
+    // Function to navigate to the login page
+    document.getElementById('signInButton').addEventListener('click', function() {
+        window.location.href = 'pages/authentication/user/login.html';
+    });
+
+    // Function to navigate to the registration page
+    document.getElementById('signUpButton').addEventListener('click', function() {
+        window.location.href = 'pages/authentication/user/register.html';
+    });
+</script>
+
 						<li class="btn-cta"><a href="#" data-nav-section="user"><span>Invest</span></a></li>
 						<li class="btn-cta"><a href="#" data-nav-section="user"><span>Raise Funds</span></a></li>
 					</ul>
@@ -203,7 +216,7 @@
                             Unlocking Abundance in real estate Development
                         </h1>
                         <p><a href="">
-                            <button class="btn btn-primary" style="font-weight: 900; padding: 20px;">
+                            <button class="btn btn" style="font-weight: 900; padding: 20px;background-color:rgb(255, 196, 0);color:white;">
                                 Get Started For Free
                             </button>
                         </a></p>
@@ -224,7 +237,9 @@
 			<div class="row row-pb-md ">
 				<div class="col-md-8 col-md-offset-2 heading animate-box" data-animate-effect="fadeIn">
 					<h1>About Us</h1>
-					<p class="sub" >Cobuild is a leading global platform to raise funds, invest and trade investments in real estate projects at your fingertips. Our creative platform seeks to unlock abundance in real estate financing: offering democratized access to investors and fund raisers in form of building materials, land, building services, labor, sales and cash.</p>
+					<p class="sub" style="
+  color:  #0f1133;
+					" >Cobuild is a leading global platform to raise funds, invest and trade investments in real estate projects at your fingertips. Our creative platform seeks to unlock abundance in real estate financing: offering democratized access to investors and fund raisers in form of building materials, land, building services, labor, sales and cash.</p>
 					<p class="subtle-text animate-box" data-animate-effect="fadeIn">AboutUs</p>
 				</div>
 			</div>
@@ -248,96 +263,6 @@
 			</div>
 		</div>
 	</section>
-
-	<section id="gtco-practice-areas" data-section="practice-areas">
-		<div class="container">
-			<div class="row row-pb-md">
-				<div class="col-md-8 col-md-offset-2 heading animate-box" data-animate-effect="fadeIn">
-					<h1>Investment Raised</h1>
-					<!-- <p class="sub">Dignissimos asperiores vitae velit veniam totam fuga molestias accusamus alias autem provident. Odit ab aliquam dolor eius.</p> -->
-					<p class="subtle-text animate-box" data-animate-effect="fadeIn">Investment  <span>Raised</span></p>
-				</div>
-			</div>
-			<div class="row ">
-				<div class="col-lg-4 ">
-					<div class="gtco-practice-area-item animate-box">
-						<div class="card" style="width: 35rem;box-shadow:5px 5px 3px grey;border-radius:25px;margin: auto;">
-							<img src="images/project.jpg" class="card-img-top img-fluid " style="max-width: 350px; border-radius:10px;" alt="...">
-							<div class="card-body text-center pt-2">
-								<h3 class="card-title" style="padding-top:10px">Investment Raised: N200,000,000</h3>
-								<h4 class="card-text" style="padding-bottom:30px;color:rgb(5, 5, 158)">Project Tittle: Oluwanimi Resort</h4>
-								<!-- <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p> -->
-							</div>
-						</div>
-					</div>
-
-				</div>
-				<div class="col-lg-4">
-					<div class="gtco-practice-area-item animate-box">
-						<div class="card" style="width: 35rem;box-shadow:5px 5px 3px grey;border-radius:25px;margin: auto;">
-							<img src="images/project.jpg" class="card-img-top img-fluid " style="max-width: 350px;border-radius:10px;" alt="...">
-							<div class="card-body text-center pt-2">
-								<h3 class="card-title" style="padding-top:10px">Investment Raised: N200,000,000</h3>
-								<h4 class="card-text" style="padding-bottom:30px;color:rgb(5, 5, 158)">Project Tittle: Oluwanimi Resort</h4>
-								<!-- <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p> -->
-							</div>
-						</div>
-					</div>
-
-				</div>
-				<div class="col-lg-4" style="margin: auto;">
-					<div class="gtco-practice-area-item animate-box ">
-						<div class="card" style="width: 35rem;box-shadow:5px 5px 3px grey;border-radius:25px;margin: auto;	">
-							<img src="images/project.jpg" class="card-img-top img-fluid " style="max-width: 350px;border-radius:10px;" alt="...">
-							<div class="card-body text-center pt-2">
-								<h3 class="card-title" style="padding-top:10px">Investment Raised: N200,000,000</h3>
-								<h4 class="card-text" style="padding-bottom:30px;color:rgb(5, 5, 158)">Project Tittle: Oluwanimi Resort</h4>
-								<!-- <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p> -->
-							</div>
-						</div>
-					</div>
-
-				</div>
-			</div>
-		</div>
-	</section>
-	
-	<section class="container">
- <div class="container mt-5">
-	<div class="row container mt-5">
-    <div class="col-md-3">
-        <div class="icon text-center">
-            <i class="fa-solid fa-list-check icon"></i>
-            <h3 class="count" data-target="560">0</h3>
-            <h3>Project Completed</h3>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="icon text-center">
-            <i class="fa-solid fa-hand-holding-dollar icon"></i>
-            <h3 class="count" data-target="7680">0</h3>
-            <h3>Raised Till Date</h3>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="icon text-center">
-            <i class="fa-solid fa-handshake icon"></i>
-            <h3 class="count" data-target="340">0</h3>
-            <h3>Partners Funding</h3>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="icon text-center">
-            <i class="fa-solid fa-face-smile-beam icon"></i>
-            <h3 class="count" data-target="2870">0</h3>
-            <h3>Happy Customers</h3>
-        </div>
-    </div>
-</div>
-    </div>
-	</section>
-	<a class="appointlet-button" data-appointlet-modal href="https://appt.link/meet-with-cobuild-2nJj3WQd" style="background-color:#040b90;position:fixed; top:450px;color:white;z-index:1000">Schedule a Meeting</a><script async defer src="https://js.appointlet.com/"></script><link href="https://js.appointlet.com/styles.css" rel="stylesheet">
-
 	<section id="gtco-our-team" data-section="">
 		<div class="container">
 			<div class="row row-pb-md">
@@ -399,11 +324,106 @@
 		</div>
 	</section>
 
+
+	<section id="gtco-practice-areas" data-section="practice-areas">
+		<div class="container">
+			<div class="row row-pb-md">
+				<div class="col-md-8 col-md-offset-2 heading animate-box" data-animate-effect="fadeIn">
+					<h1>Featured Investment Projects</h1>
+					<!-- <p class="sub">Dignissimos asperiores vitae velit veniam totam fuga molestias accusamus alias autem provident. Odit ab aliquam dolor eius.</p> -->
+					<p class="subtle-text animate-box" data-animate-effect="fadeIn">Featured  <span>Projects</span></p>
+				</div>
+			</div>
+			<div class="row ">
+				<div class="col-lg-4 ">
+					<div class="gtco-practice-area-item animate-box">
+						<div class="card" style="width: 35rem;box-shadow:5px 5px 3px grey;border-radius:25px;margin: auto;">
+							<img src="images/project.jpg" class="card-img-top img-fluid " style="max-width: 350px; border-radius:10px;" alt="...">
+							<div class="card-body text-center pt-2">
+								<h3 class="card-title" style="padding-top:10px">Investment Raised: N200,000,000</h3>
+								<h4 class="card-text" style="padding-bottom:30px;color:rgb(5, 5, 158)">Project Tittle: Oluwanimi Resort</h4>
+								<!-- <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p> -->
+							</div>
+						</div>
+					</div>
+
+				</div>
+				<div class="col-lg-4">
+					<div class="gtco-practice-area-item animate-box">
+						<div class="card" style="width: 35rem;box-shadow:5px 5px 3px grey;border-radius:25px;margin: auto;">
+							<img src="images/project.jpg" class="card-img-top img-fluid " style="max-width: 350px;border-radius:10px;" alt="...">
+							<div class="card-body text-center pt-2">
+								<h3 class="card-title" style="padding-top:10px">Investment Raised: N200,000,000</h3>
+								<h4 class="card-text" style="padding-bottom:30px;color:rgb(5, 5, 158)">Project Tittle: Oluwanimi Resort</h4>
+								<!-- <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p> -->
+							</div>
+						</div>
+					</div>
+
+				</div>
+				<div class="col-lg-4" style="margin: auto;">
+					<div class="gtco-practice-area-item animate-box ">
+						<div class="card" style="width: 35rem;box-shadow:5px 5px 3px grey;border-radius:25px;margin: auto;	">
+							<img src="images/project.jpg" class="card-img-top img-fluid " style="max-width: 350px;border-radius:10px;" alt="...">
+							<div class="card-body text-center pt-2">
+								<h3 class="card-title" style="padding-top:10px">Investment Raised: N200,000,000</h3>
+								<h4 class="card-text" style="padding-bottom:30px;color:rgb(5, 5, 158)">Project Tittle: Oluwanimi Resort</h4>
+								<!-- <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p> -->
+							</div>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</section>
+
+	
+	
+	<section class="container">
+ <div class="container mt-5">
+	<div class="row container mt-5">
+    <div class="col-md-3">
+        <div class="icon text-center">
+            <i class="fa-solid fa-list-check icon"></i>
+            <h3 class="count" data-target="560">0</h3>
+            <h3>Project Completed</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="icon text-center">
+            <i class="fa-solid fa-hand-holding-dollar icon"></i>
+            <h3 class="count" data-target="7680">0</h3>
+            <h3>Raised Till Date</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="icon text-center">
+            <i class="fa-solid fa-handshake icon"></i>
+            <h3 class="count" data-target="340">0</h3>
+            <h3>Partners Funding</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="icon text-center">
+            <i class="fa-solid fa-face-smile-beam icon"></i>
+            <h3 class="count" data-target="2870">0</h3>
+            <h3>Happy Customers</h3>
+        </div>
+    </div>
+</div>
+    </div>
+	</section>
+	<a class="appointlet-button" data-appointlet-modal href="https://appt.link/meet-with-cobuild-2nJj3WQd" style="background-color:#040b90;position:fixed; top:450px;color:white;z-index:1000">Schedule a Meeting</a><script async defer src="https://js.appointlet.com/"></script><link href="https://js.appointlet.com/styles.css" rel="stylesheet">
+
+	
 	<section id="gtco-contact" data-section="contact">
 		<div class="container">
 			<div class="col-md-8 col-md-offset-2 heading animate-box" data-animate-effect="fadeIn">
 			<h1>FAQs</h1>
-			<p class="sub">Some Answered Questions Below</p>
+			<p class="sub" style="
+  color:  #0f1133;
+			">Some Answered Questions Below</p>
 			<p class="subtle-text animate-box"  data-animate-effect="fadeIn">FAQs</p>
 				</div>
 		</div>
@@ -416,7 +436,9 @@
 								</button>
 						</h2>
 						<div id="tab1" class="accordion-collapse">
-								<div class="accordion-body">
+								<div class="accordion-body" style="
+  color:  #0f1133;
+								">
 									You can invest by browsing projects and finding one that suits your interest. Once you do, You choose the labour/skill or fund you want to invest.
 								</div>
 						</div>
@@ -428,7 +450,9 @@
 								</button>
 						</h2>
 						<div id="tab2" class="accordion-collapse">
-								<div class="accordion-body">
+								<div class="accordion-body" style="
+  color:  #0f1133;
+								">
 									Once you Invest, You are given a certificate of Investment as well as the developer's contact information and location. Every Project on Cobuild has been verified. You can also request for an immediate realization from the investor.
 								</div>
 						</div>
@@ -440,7 +464,9 @@
 								</button>
 						</h2>
 						<div id="tab3" class="accordion-collapse">
-								<div class="accordion-body">
+								<div class="accordion-body" style="
+  color:  #0f1133;
+								">
 									Investments may come in the form of skill, labour or materials, where you give in exchange for shares, free tickets or whatever the developer has to offer.
 								</div>
 						</div>
@@ -452,7 +478,9 @@
 								</button>
 						</h2>
 						<div id="tab4" class="accordion-collapse">
-								<div class="accordion-body">
+								<div class="accordion-body" style="
+  color:  #0f1133;
+								">
 									Any skill as may be listed and demanded by developers including Masons, carpentry, bricklaying, electricians, plumbers, draught, artisans, welders, accounting clerks, heaver machine drivers, Engineers, Architects, quantity surveying, technicians, Civil and mechanical engineers, web developers,  Accountants, Real estate marketers and sales persons.
 								</div>
 						</div>
@@ -464,7 +492,9 @@
 								</button>
 						</h2>
 						<div id="tab5" class="accordion-collapse">
-								<div class="accordion-body">
+								<div class="accordion-body" style="
+  color:  #0f1133;
+								">
 									You can invest any building material as may be requested by the developer. So check for investment opportunities that allow you to invest my  building material you have.
 								</div>
 						</div>
@@ -476,7 +506,9 @@
 								</button>
 						</h2>
 						<div id="tab6" class="accordion-collapse">
-								<div class="accordion-body">
+								<div class="accordion-body" style="
+  color:  #0f1133;
+								">
 									The pattern of payment for your investment is project-specific. However, all projects would pay a minimum of 10% of our skill or materials investment as soon as your job is certified.
 								</div>
 						</div>
@@ -488,7 +520,10 @@
 								</button>
 						</h2>
 						<div id="tab7" class="accordion-collapse">
-								<div class="accordion-body">
+								<div class="accordion-body"
+								style="
+  color:  #0f1133;
+								">
 									If you choose to pull out of your investment, you can trade your investment on the platform and receive your investment back. In case of dormant or fraudulent activity investments can also be returned.
 								</div>
 						</div>
@@ -503,7 +538,9 @@
 			<div class="row row-pb-md">
 				<div class="col-md-8 col-md-offset-2 heading animate-box" data-animate-effect="fadeIn">
 					<h1>Contact Us</h1>
-					<p class="sub">You can send us a direct message, through the form below.</p>
+					<p class="sub" style="
+  color:  #0f1133;
+					">You can send us a direct message, through the form below.</p>
 					<p class="subtle-text animate-box" data-animate-effect="fadeIn">Contact</p>
 				</div>
 			</div>
@@ -530,7 +567,7 @@
 				<div class="col-md-4 col-md-pull-6 animate-box">
 					<div class="gtco-contact-info">
 						<ul>
-							<li class="address" >24, Valley View Close, Valley Estate, Idi Mangoro, Ikeja, Lagos, Nigeria.</li>
+							<li class="address" ><a href="">24, Valley View Close, Valley Estate, Idi Mangoro, Ikeja, Lagos, Nigeria.</a></li>
 							<li class="phone"><a href="tel://+234 803 711 0870">+234 803 711 0870</a></li>
 							<li class="email"><a href="mailto:Officialcobuild@gmail.com">Officialcobuild@gmail.com</a></li>
 							<!-- <li class="url"><a href="#">http://example.com</a></li> -->
@@ -548,7 +585,7 @@
 					<div>
 						<h2>Get In Touch</h2>
 						<ul style="list-style-type: none;">
-							<li class="address"> <i class="fa-solid fa-location pe-5" style="color: rgb(7, 7, 142);padding-right:10px;"></i>24, Valley View Close, Valley Estate, Idi Mangoro, Ikeja, Lagos, Nigeria.</li>
+							<li class="address"> <i class="fa-solid fa-location pe-5" style="color: rgb(7, 7, 142);padding-right:10px;"></i><a href="">24, Valley View Close, Valley Estate, Idi Mangoro, Ikeja, Lagos, Nigeria.</a></li>
 							<li class="phone"><a href="tel://+234 803 711 0870"> <i class="fa-solid fa-phone" style="padding-right: 10px;"></i>+234 803 711 0870</a></li>
 							<li class="email"><a href="mailto:Officialcobuild@gmail.com"> <i class="fa-solid fa-envelope" style="padding-right: 10px;"></i> Officialcobuild@gmail.com</a></li>
 							<!-- <li class="url"><a href="#">http://example.com</a></li> -->
