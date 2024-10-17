@@ -188,7 +188,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <img src="../../../images/Cobuild_logo.png" alt="">
 
         <h2>User Login</h2>
-        <form action="" method="POST">
+        <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="POST">
             <div class="mb-3">
                 <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
             </div>

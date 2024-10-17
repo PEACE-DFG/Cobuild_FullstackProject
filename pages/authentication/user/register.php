@@ -243,7 +243,7 @@ function sendEmail($to, $unique_code) {
     <img src="../../../images/Cobuild_logo.png" alt="" class="img-fluid w-100 h-25 d-flex justify-center">
 
         <h2>User Registration</h2>
-        <form action="register.php" method="POST">
+        <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="POST">
             <div class="mb-2">
                 <input type="text" name="name" class="form-control" placeholder="Full Name" required>
             </div>
