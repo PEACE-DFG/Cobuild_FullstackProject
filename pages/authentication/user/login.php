@@ -1,10 +1,65 @@
+<?php
+// Include your database connection
+include('../../../database/db.php');
+
+// Initialize message variables for SweetAlert
+$message = '';
+$message_type = '';
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Sanitize and retrieve form inputs
+    $email = htmlspecialchars(trim($_POST['email']));
+    $password = $_POST['password'];
+    $unique_code = htmlspecialchars(trim($_POST['id_code']));
+
+    // Prepare a SQL query to get user details based on the entered email
+    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        // Fetch the user data
+        $user = $result->fetch_assoc();
+        $db_password = $user['password'];  // Hashed password stored in the DB
+        $db_unique_code = $user['unique_code'];  // Unique code stored in the DB
+
+        // Verify password and unique code
+        if (password_verify($password, $db_password) && $unique_code == $db_unique_code) {
+            // Login successful
+            $message = "Login successful! Redirecting to your dashboard...";
+            $message_type = 'success';
+
+            // Start session and store the user ID
+            session_start();
+            $_SESSION['user_id'] = $user['id'];  // Store the user ID in session
+
+            // Don't redirect immediately, use JavaScript later to redirect after SweetAlert
+        } else {
+            // Invalid password or unique code
+            $message = "Invalid password or unique code!";
+            $message_type = 'error';
+        }
+    } else {
+        // Email not found in the database
+        $message = "No account found with this email!";
+        $message_type = 'error';
+    }
+
+    // Close the statement and connection
+    $stmt->close();
+    $conn->close();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login Page</title>
+    <title>Login Page</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body, html {
             height: 100%;
@@ -12,7 +67,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(135deg, #b87df6, #0440a9);
+            background: linear-gradient(135deg, #4b0397, #031c46);
             font-family: 'Poppins', sans-serif;
             overflow: hidden;
         }
@@ -48,7 +103,7 @@
         }
 
         .login-container button {
-            background: linear-gradient(135deg, #b87df6, #0440a9);
+            background: linear-gradient(135deg, #6a11cb, #021f50);
             color: white;
             border: none;
             padding: 12px;
@@ -119,28 +174,6 @@
         body.loaded .login-container {
             display: block;
         }
-
-        /* Add some responsive behavior */
-        @media (max-width: 768px) {
-            .login-container {
-                padding: 30px;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .login-container {
-                padding: 20px;
-            }
-
-            .login-container h2 {
-                font-size: 1.5rem;
-            }
-
-            .login-container button {
-                padding: 10px;
-                font-size: 0.9rem;
-            }
-        }
     </style>
 </head>
 <body>
@@ -153,25 +186,24 @@
     <!-- Login Form -->
     <div class="login-container">
         <img src="../../../images/Cobuild_logo.png" alt="">
-        <h2>Admin Login</h2>
-        <form action="#" method="POST">
+
+        <h2>User Login</h2>
+        <form action="" method="POST">
             <div class="mb-3">
-                <input type="email" class="form-control" placeholder="Enter your email" required>
+                <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
             </div>
             <div class="mb-3">
-                <input type="password" class="form-control" placeholder="Enter your password" required>
+                <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
             </div>
             <div class="mb-3">
-                <input type="text" class="form-control" placeholder="Enter your ID code" required>
+                <input type="text" name="id_code" class="form-control" placeholder="Enter your ID code" required>
             </div>
             <button type="submit" class="btn btn-primary">Login</button>
         </form>
         <div class="footer-text">
-            <p>Don't have an account? <a href="register.html">Register here</a></p>
+            <p>Don't have an account? <a href="register.php">Register here</a></p>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         // Simulate a loading time
@@ -180,6 +212,33 @@
                 document.body.classList.add('loaded');
             }, 3000); // Delay for 3 seconds to display the loader animation
         });
+
+        // Show SweetAlert for any login messages
+        var message = "<?php echo isset($message) ? $message : ''; ?>";
+        var messageType = "<?php echo isset($message_type) ? $message_type : ''; ?>";
+
+        if (message && messageType === 'success') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: message,
+                showConfirmButton: false,
+                timer: 2000  // Display the alert for 2 seconds
+            }).then(() => {
+                // Show loader and navigate to the dashboard after a short delay
+                document.body.classList.remove('loaded'); // Show the loader again
+                setTimeout(() => {
+                    window.location.href = "dashboardtest.php";  // Navigate to the dashboard after the loader
+                }, 2000);  // 2-second delay before navigating to the dashboard
+            });
+        } else if (message) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: message
+            });
+        }
     </script>
+
 </body>
 </html>

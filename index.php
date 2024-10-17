@@ -174,12 +174,12 @@
 <script>
     // Function to navigate to the login page
     document.getElementById('signInButton').addEventListener('click', function() {
-        window.location.href = 'pages/authentication/user/login.html';
+        window.location.href = 'pages/authentication/user/login.php';
     });
 
     // Function to navigate to the registration page
     document.getElementById('signUpButton').addEventListener('click', function() {
-        window.location.href = 'pages/authentication/user/register.html';
+        window.location.href = 'pages/authentication/user/register.php';
     });
 </script>
 

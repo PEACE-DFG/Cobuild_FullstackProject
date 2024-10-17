@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registration Page</title>
+    <title>Admin Login Page</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body, html {
@@ -17,37 +17,37 @@
             overflow: hidden;
         }
 
-        .register-container {
+        .login-container {
             background-color: white;
             padding: 40px;
             border-radius: 10px;
-            max-width: 450px;
+            max-width: 400px;
             width: 100%;
             box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);
             position: relative;
-            display: none; /* Initially hide the register container */
+            display: none; /* Initially hide the login container */
         }
 
-        .register-container h2 {
+        .login-container h2 {
             text-align: center;
             color: #333;
             font-weight: bold;
             margin-bottom: 20px;
         }
 
-        .register-container input {
+        .login-container input {
             border-radius: 50px;
             padding: 12px 20px;
             border: 1px solid #ddd;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
 
-        .register-container input:focus {
+        .login-container input:focus {
             border-color: #6a11cb;
             box-shadow: 0 0 10px rgba(106, 17, 203, 0.3);
         }
 
-        .register-container button {
+        .login-container button {
             background: linear-gradient(135deg, #b87df6, #0440a9);
             color: white;
             border: none;
@@ -58,7 +58,7 @@
             transition: background-color 0.3s;
         }
 
-        .register-container button:hover {
+        .login-container button:hover {
             background-color: #5a0fc7;
         }
 
@@ -111,32 +111,32 @@
             50% { border-color: rgba(106, 17, 203, 0.8); }
         }
 
-        /* Hide loader when register form is visible */
+        /* Hide loader when login form is visible */
         body.loaded .loader {
             display: none;
         }
 
-        body.loaded .register-container {
+        body.loaded .login-container {
             display: block;
         }
 
         /* Add some responsive behavior */
         @media (max-width: 768px) {
-            .register-container {
+            .login-container {
                 padding: 30px;
             }
         }
 
         @media (max-width: 576px) {
-            .register-container {
+            .login-container {
                 padding: 20px;
             }
 
-            .register-container h2 {
+            .login-container h2 {
                 font-size: 1.5rem;
             }
 
-            .register-container button {
+            .login-container button {
                 padding: 10px;
                 font-size: 0.9rem;
             }
@@ -150,30 +150,24 @@
         <span>Cobuild</span>
     </div>
 
-    <!-- Registration Form -->
-    <div class="register-container">
+    <!-- Login Form -->
+    <div class="login-container">
         <img src="../../../images/Cobuild_logo.png" alt="">
-        <h2>Admin Registration</h2>
+        <h2>Admin Login</h2>
         <form action="#" method="POST">
-            <div class="mb-2">
-                <input type="text" class="form-control" placeholder="Full Name" required>
+            <div class="mb-3">
+                <input type="email" class="form-control" placeholder="Enter your email" required>
             </div>
-            <div class="mb-2">
-                <input type="email" class="form-control" placeholder="Email Address" required>
+            <div class="mb-3">
+                <input type="password" class="form-control" placeholder="Enter your password" required>
             </div>
-            <div class="mb-2">
-                <input type="password" class="form-control" placeholder="Password" required>
+            <div class="mb-3">
+                <input type="text" class="form-control" placeholder="Enter your ID code" required>
             </div>
-            <div class="mb-2">
-                <input type="password" class="form-control" placeholder="Repeat Password" required>
-            </div>
-            <div class="mb-2">
-                <input type="tel" class="form-control" placeholder="Phone Number" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Register</button>
+            <button type="submit" class="btn btn-primary">Login</button>
         </form>
         <div class="footer-text">
-            <p>Already have an account? <a href="login.html">Login here</a></p>
+            <p>Don't have an account? <a href="register.php">Register here</a></p>
         </div>
     </div>
 
