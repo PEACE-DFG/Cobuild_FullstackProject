@@ -67,8 +67,7 @@ CREATE TABLE user_preferences (
 ALTER TABLE users ADD COLUMN unique_code VARCHAR(10) UNIQUE;
 
 
-        $mail->Username   = 'Officialcobuild@gmail.com';  // Your email
-        $mail->Password   = 'udodjurhumdfrsim'; 
+     
 
 
   

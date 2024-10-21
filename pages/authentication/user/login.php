@@ -228,7 +228,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Show loader and navigate to the dashboard after a short delay
                 document.body.classList.remove('loaded'); // Show the loader again
                 setTimeout(() => {
-                    window.location.href = "dashboardtest.php";  // Navigate to the dashboard after the loader
+                    window.location.href = "dashboard.php";  // Navigate to the dashboard after the loader
                 }, 2000);  // 2-second delay before navigating to the dashboard
             });
         } else if (message) {
