@@ -325,7 +325,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['profile-image'])) {
     </div>
 
     <footer>
-        <p>&copy; 2024 Cobuild. All rights reserved.</p>
+        <p>&copy; 2024 Cobuild. All rights reserved. Designed By CODEMaster</p>
     </footer>
 
     <!-- Bootstrap JS and dependencies -->
