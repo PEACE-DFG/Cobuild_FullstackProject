@@ -2,6 +2,9 @@
 // Include your database connection
 include('../../../database/db.php');
 
+// Start session if not already started
+session_start();
+
 // Initialize message variables for SweetAlert
 $message = '';
 $message_type = '';
@@ -30,9 +33,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $message = "Login successful! Redirecting to your dashboard...";
             $message_type = 'success';
 
-            // Start session and store the user ID
-            session_start();
-            $_SESSION['user_id'] = $user['id'];  // Store the user ID in session
+            // Store the user ID and email in the session
+            $_SESSION['user_id'] = $user['id'];  
+            $_SESSION['user_email'] = $user['email'];  // Store email in session
 
             // Don't redirect immediately, use JavaScript later to redirect after SweetAlert
         } else {
@@ -51,6 +54,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $conn->close();
 }
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -201,44 +206,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <button type="submit" class="btn btn-primary">Login</button>
         </form>
         <div class="footer-text">
-            <p>Don't have an account? <a href="register.php">Register here</a></p>
+            <br>
+        <p>Don't have an account? <a href="register.php">Register here</a></p>
+        <p>Forgotten Password? <a href="" style="color:orange">Click Here</a></p>
         </div>
     </div>
 
-    <script>
-        // Simulate a loading time
-        window.addEventListener('load', function() {
+<!-- Loader & SweetAlert Display -->
+<script>
+    // Simulate a loading time
+    window.addEventListener('load', function() {
+        setTimeout(() => {
+            document.body.classList.add('loaded');
+        }, 3000); // Delay for 3 seconds to display the loader animation
+    });
+
+    // Show SweetAlert for any login messages
+    var message = "<?php echo isset($message) ? $message : ''; ?>";
+    var messageType = "<?php echo isset($message_type) ? $message_type : ''; ?>";
+
+    if (message && messageType === 'success') {
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: message,
+            showConfirmButton: false,
+            timer: 2000  // Display the alert for 2 seconds
+        }).then(() => {
+            // Show loader and navigate to the dashboard after a short delay
+            document.body.classList.remove('loaded'); // Show the loader again
             setTimeout(() => {
-                document.body.classList.add('loaded');
-            }, 3000); // Delay for 3 seconds to display the loader animation
+                window.location.href = "dashboard.php";  // Navigate to the dashboard after the loader
+            }, 2000);  // 2-second delay before navigating to the dashboard
         });
-
-        // Show SweetAlert for any login messages
-        var message = "<?php echo isset($message) ? $message : ''; ?>";
-        var messageType = "<?php echo isset($message_type) ? $message_type : ''; ?>";
-
-        if (message && messageType === 'success') {
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: message,
-                showConfirmButton: false,
-                timer: 2000  // Display the alert for 2 seconds
-            }).then(() => {
-                // Show loader and navigate to the dashboard after a short delay
-                document.body.classList.remove('loaded'); // Show the loader again
-                setTimeout(() => {
-                    window.location.href = "dashboard.php";  // Navigate to the dashboard after the loader
-                }, 2000);  // 2-second delay before navigating to the dashboard
-            });
-        } else if (message) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: message
-            });
-        }
-    </script>
-
+    } else if (message) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: message
+        });
+    }
+</script>
 </body>
 </html>

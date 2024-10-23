@@ -215,23 +215,50 @@ ob_end_flush();
             <li class="nav-item">
                 <a class="nav-link" href="#"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
             </li>
+       
             <li class="nav-item">
-                <a class="nav-link" href="#"><i class="fas fa-users me-2"></i> Users</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#"><i class="fas fa-tasks me-2"></i> Tasks</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#"><i class="fas fa-chart-line me-2"></i> Analytics</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#"><i class="fas fa-cogs me-2"></i> Settings</a>
+                <a class="nav-link" href="../../../index.php"><i class="fas fa-home"></i> Go to Home</a>
             </li>
             <li class="nav-item">
             <form action="logout.php" method="post" class="d-inline">
-    <button type="submit" name="logout" class="nav-link btn btn-link text-white">
+    <button type="submit" name="logout" id="logoutButton" class="nav-link btn btn-link text-white">
         <i class="fas fa-sign-out-alt me-2"></i> Logout
     </button>
+    <script>
+document.getElementById('logoutButton').addEventListener('click', function(event) {
+    event.preventDefault(); // Prevent the default link behavior
+
+    // Display a confirmation dialog using SweetAlert
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You will be logged out!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, log me out!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Create a form to send POST request to logout.php
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'logout.php';
+
+            // Create a hidden input to signal logout confirmation
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'confirm_logout';
+            input.value = 'yes';
+
+            form.appendChild(input);
+            document.body.appendChild(form);
+
+            // Submit the form, logging out the user
+            form.submit();
+        }
+    });
+});
+</script>
 </form>
 
             </li>

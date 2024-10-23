@@ -1,5 +1,8 @@
+<?php
+ob_start();
+session_start();
+?>
 <!DOCTYPE HTML>
-
 <html>
 	<head>
 	<meta charset="utf-8">
@@ -155,21 +158,48 @@
 
 	
 	<div id="page">
-	<nav class="gtco-nav" role="navigation">
-		<div class="container">
-			<div class="row">
-				<div class="col-sm-2 col-xs-12">
-					<div id="gtco-logo"><a href="index.html"><img src="images/Cobuild_logo.png" class="w-25 img-fluid " style="width: 135px;" alt=""></a></div>
-				</div>
-				<div class="col-xs-10 text-right text-white menu-1 main-nav" style="color: white;">
-					<ul>
-						<li class="active"><a href="#" data-nav-section="home">Home</a></li>
-						<li><a href="#" data-nav-section="about">About</a></li>
-						<li><a href="#" data-nav-section="practice-areas">Projects</a></li>
-						<li class="btn-cta"><a href="#" data-nav-section="contact"><span>FAQ</span></a></li>
-						<li><a href="#" data-nav-section="our-team">Contacts</a></li>
-						<li class="btn-cta" id="signInButton"><a href="#"><span>Sign In</span></a></li>
-<li class="btn-cta" id="signUpButton"><a href="#"><span>Sign Up</span></a></li>
+
+
+<nav class="gtco-nav" role="navigation">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-2 col-xs-12">
+                <div id="gtco-logo">
+                    <a href="index.html"><img src="images/Cobuild_logo.png" class="w-25 img-fluid" style="width: 135px;" alt=""></a>
+                </div>
+            </div>
+            <div class="col-xs-10 text-right text-white menu-1 main-nav" style="color: white;">
+                <ul>
+                    <li class="active"><a href="#" data-nav-section="home">Home</a></li>
+                    <li><a href="#" data-nav-section="about">About</a></li>
+                    <li><a href="#" data-nav-section="practice-areas">Projects</a></li>
+                    <li class="btn-cta"><a href="#" data-nav-section="contact"><span>FAQ</span></a></li>
+                    <li><a href="#" data-nav-section="our-team">Contacts</a></li>
+
+                    <?php if (!isset($_SESSION['user_id'])): ?>
+                        <!-- User is not logged in, show Sign In and Sign Up buttons -->
+                        <li class="btn-cta" id="signInButton"><a href="#"><span>Sign In</span></a></li>
+                        <li class="btn-cta" id="signUpButton"><a href="#"><span>Sign Up</span></a></li>
+                        <li class="btn-cta"><a href="#" data-nav-section="user"><span>Invest</span></a></li>
+                        <li class="btn-cta"><a href="#" data-nav-section="user"><span>Raise Funds</span></a></li>
+                    <?php else: ?>
+                        <!-- User is logged in, show user email with dropdown and logout option -->
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <?php echo $_SESSION['user_email']; ?> <span class="caret"></span>
+                            </a>
+                        </li>
+												<li class="btn-cta">
+														<a href="#" id="logoutButton"><span>Logout</span></a>
+												</li>
+
+                    <?php endif; ?>
+
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
 
 <script>
     // Function to navigate to the login page
@@ -182,15 +212,43 @@
         window.location.href = 'pages/authentication/user/register.php';
     });
 </script>
+<script>
+document.getElementById('logoutButton').addEventListener('click', function(event) {
+    event.preventDefault(); // Prevent the default link behavior
 
-						<li class="btn-cta"><a href="#" data-nav-section="user"><span>Invest</span></a></li>
-						<li class="btn-cta"><a href="#" data-nav-section="user"><span>Raise Funds</span></a></li>
-					</ul>
-				</div>
-			</div>
-			
-		</div>
-	</nav>
+    // Display a confirmation dialog using SweetAlert
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You will be logged out!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, log me out!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Create a form to send POST request to logout.php
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'pages/authentication/user/logout.php';
+
+            // Create a hidden input to signal logout confirmation
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'confirm_logout';
+            input.value = 'yes';
+
+            form.appendChild(input);
+            document.body.appendChild(form);
+
+            // Submit the form, logging out the user
+            form.submit();
+        }
+    });
+});
+</script>
+
+
 
 	<section id="gtco-hero" class="gtco-cover" data-section="home" data-stellar-background-ratio="0.5">
     <!-- Background Video -->
@@ -771,6 +829,10 @@ function sendEmail(event) {
 	<!-- Start of HubSpot Embed Code -->
   <script type="text/javascript" id="hs-script-loader" async defer src="//js-na1.hs-scripts.com/47650118.js"></script>
 <!-- End of HubSpot Embed Code -->
+
+<?php
+ob_end_flush()
+?>
 	</body>
 </html>
 
