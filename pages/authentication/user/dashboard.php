@@ -1,12 +1,11 @@
 <?php
+ob_start();
 require '../../../database/db.php';
 session_start();
-
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
-
 // Fetch user information
 $user_id = $_SESSION['user_id'];
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
@@ -14,64 +13,57 @@ $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 $user = $result->fetch_assoc();
-
 // Check if the user exists
 if (!$user) {
     header("Location: login.php");
     exit();
 }
-
 // Check user type and load appropriate dashboard
 $dashboard_type = ($user['user_type'] == 'builder') ? 'builder' : 'investor';
 // Define MAIN_DASHBOARD to include builder_dashboard.php correctly
 define('MAIN_DASHBOARD', true);
-
+// Initialize an array to store error messages
+$errors = [];
 // Function to handle profile image upload
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['profile-image'])) {
-  $target_dir = "uploads/";
-  $target_file = $target_dir . basename($_FILES["profile-image"]["name"]);
-  $uploadOk = 1;
-  $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-
-  // Check if image file is an actual image or fake image
-  $check = getimagesize($_FILES["profile-image"]["tmp_name"]);
-  if ($check !== false) {
-      $uploadOk = 1;
-  } else {
-      echo "File is not an image.";
-      $uploadOk = 0;
-  }
-
-  // Check file size
-  if ($_FILES["profile-image"]["size"] > 500000) { // 500KB limit
-      echo "Sorry, your file is too large.";
-      $uploadOk = 0;
-  }
-
-  // Allow certain file formats
-  if ($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg" && $imageFileType != "gif") {
-      echo "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
-      $uploadOk = 0;
-  }
-
-  // Check if $uploadOk is set to 0 by an error
-  if ($uploadOk == 0) {
-      echo "Sorry, your file was not uploaded.";
-  } else {
-      // If everything is ok, try to upload file
-      if (move_uploaded_file($_FILES["profile-image"]["tmp_name"], $target_file)) {
-          // Update user profile with the new image path
-          $stmt = $conn->prepare("UPDATE users SET profile_image = ? WHERE id = ?");
-          $stmt->bind_param("si", $target_file, $user_id);
-          $stmt->execute();
-      } else {
-          echo "Sorry, there was an error uploading your file.";
-      }
-  }
+    $target_dir = "uploads/";
+    $target_file = $target_dir . basename($_FILES["profile-image"]["name"]);
+    $uploadOk = 1;
+    $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+    // Check if image file is an actual image or fake image
+    $check = getimagesize($_FILES["profile-image"]["tmp_name"]);
+    if ($check === false) {
+        $errors[] = "File is not an image.";
+        $uploadOk = 0;
+    }
+    // Check file size
+    if ($_FILES["profile-image"]["size"] > 500000) { // 500KB limit
+        $errors[] = "Sorry, your file is too large.";
+        $uploadOk = 0;
+    }
+    // Allow certain file formats
+    if (!in_array($imageFileType, ["jpg", "png", "jpeg", "gif"])) {
+        $errors[] = "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
+        $uploadOk = 0;
+    }
+    // Check if $uploadOk is set to 0 by an error
+    if ($uploadOk == 0) {
+        $errors[] = "Sorry, your file was not uploaded.";
+    } else {
+        // If everything is ok, try to upload the file
+        if (move_uploaded_file($_FILES["profile-image"]["tmp_name"], $target_file)) {
+            // Update user profile with the new image path
+            $stmt = $conn->prepare("UPDATE users SET profile_image = ? WHERE id = ?");
+            $stmt->bind_param("si", $target_file, $user_id);
+            $stmt->execute();
+        } else {
+            $errors[] = "Sorry, there was an error uploading your file.";
+        }
+    }
 }
+ob_end_flush();
 
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -85,6 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['profile-image'])) {
     <!-- Chart.js for charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Custom Styles -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --primary-blue: #040b90;
@@ -347,5 +340,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['profile-image'])) {
             backdrop.style.display = 'none';
         });
     </script>
+<?php
+if (!empty($errors)) {
+    // Convert the $errors array into a single string
+    $error_message = implode("\n", $errors);
+    echo "<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: '" . addslashes($error_message) . "'
+            });
+        });
+    </script>";
+}
+?>
 </body>
 </html>
