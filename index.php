@@ -1,7 +1,17 @@
 <?php
 ob_start();
 session_start();
+
+if (isset($_SESSION['user_id'])) {
+	// Define dashboard link if user is logged in
+	echo "<script>var dashboardLink = 'pages/authentication/user/dashboard.php';</script>";
+} else {
+	// Redirect to login if user is not logged in
+	echo "<script>var dashboardLink = 'pages/authentication/user/login.php';</script>";
+}
+
 ?>
+
 <!DOCTYPE HTML>
 <html>
 	<head>
@@ -186,9 +196,12 @@ session_start();
                         <!-- User is logged in, show user email with dropdown and logout option -->
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                <?php echo $_SESSION['user_email']; ?> <span class="caret"></span>
+                                <?php echo $_SESSION['user_email']; ?> 
                             </a>
                         </li>
+												<li class="btn-cta">
+													<a href="javascript:void(0);" id="dashboardLink">Dashboard</a>
+												</li>
 												<li class="btn-cta">
 														<a href="#" id="logoutButton"><span>Logout</span></a>
 												</li>
@@ -247,6 +260,24 @@ document.getElementById('logoutButton').addEventListener('click', function(event
     });
 });
 </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Function to navigate to the Dashboard page
+        document.getElementById('dashboardLink').addEventListener('click', function() {
+            window.location.href = dashboardLink;
+        });
+
+        // Existing navigation for Sign In and Sign Up buttons
+        document.getElementById('signInButton').addEventListener('click', function() {
+            window.location.href = 'pages/authentication/user/login.php';
+        });
+
+        document.getElementById('signUpButton').addEventListener('click', function() {
+            window.location.href = 'pages/authentication/user/register.php';
+        });
+    });
+</script>
+
 
 
 

@@ -58,8 +58,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     if (sendEmail($email, $unique_code)) {
                         $message = "Registration successful! Check your email for the unique code.";
                         $message_type = 'success';
-                    } else {
-                        $message = "Registration successful, but email could not be sent.";
+                    }  else {
+                        // If email fails, delete user entry
+                        $delete_user = $conn->prepare("DELETE FROM users WHERE email = ?");
+                        $delete_user->bind_param("s", $email);
+                        $delete_user->execute();
+
+                        $message = "Registration failed because the email could not be sent. Please try again.";
                         $message_type = 'error';
                     }
                 } else {
@@ -104,33 +109,45 @@ function sendEmail($to, $unique_code) {
         // Content
         $mail->isHTML(true);
         $mail->Subject = 'Your Cobuild Unique Code';
-        $mail->Body    = "
-        <html>
-        <head>
-            <style>
-                body { font-family: Arial, sans-serif; }
-                .container { background-color: #f4f4f4; padding: 20px; border-radius: 8px; }
-                h1 { color: #0044cc; }
-                p { color: #333; }
-                .code { background-color: #0044cc; color: white; padding: 10px; border-radius: 4px; display: inline-block; }
-            </style>
-        </head>
-        <body>
-            <div class='container'>
-               <img src='../../../images/Cobuild_logo.png' alt='' class='img-fluid w-100 h-25 d-flex justify-cente'>
-                <h1>Welcome to Cobuild!</h1>
-                <p>Thank you for registering with Cobuild. Here is your unique code:</p>
-                <p class='code'>$unique_code</p>
-                <p>Use this code to log in and complete any payments.Please do not share this Unique Code.</p>
+        // Create HTML email body
+        $mail->addEmbeddedImage('../../../images/Cobuild_logo.png', 'logo_img'); // Local path and CID
+
+        $mail->Body = "
+            <div style='max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;'border:1px solid transparent;box-shadow:5px 5px 3px grey;>
+                <div style='background: blue; padding: 20px; text-align: center;'>
+                    <img src='cid:logo_img' alt='Cobuild' style='max-width: 200px;'>
+                </div>
+                
+                <div style='background-color: #ffffff; padding: 30px; border-radius: 5px; margin-top: 20px;'>
+                    <h2 style='color: #4b0397; text-align: center;'>Welcome to Cobuild!</h2>
+                    
+                    <p style='color: #666; font-size: 16px; line-height: 1.6; text-align: center;'>
+                        Thank you for registering with Cobuild. Here is your unique verification code:
+                    </p>
+                    
+                    <div style='background: blue; color: white; border:2px solid transparent;
+                              padding: 15px; margin: 20px 0; text-align: center; font-size: 24px; 
+                              border-radius: 5px;'>
+                        $unique_code
+                    </div>
+                    
+                    <p style='color: #666; font-size: 14px; text-align: center;'>
+                        Please use this code to login and complete any payments.<br>
+                        <strong>Important:</strong> Do not share this code with anyone.
+                    </p>
+                </div>
+                
+                <div style='text-align: center; margin-top: 20px; color: #666; font-size: 12px;'>
+                    <p>&copy; " . date('Y') . " Cobuild. All rights reserved.</p>
+                </div>
             </div>
-        </body>
-        </html>
         ";
         $mail->AltBody = 'Thank you for registering with Cobuild. Your unique code: ' . $unique_code;
 
         $mail->send();
         return true;
     } catch (Exception $e) {
+        error_log("Email error: " . $mail->ErrorInfo);
         return false;
     }
 }
@@ -215,6 +232,50 @@ function sendEmail($to, $unique_code) {
             text-decoration: underline;
         }
 
+        /* Loader Styles */
+        .loader {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .loader span {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #6a11cb;
+            border-right: 2px solid rgba(106, 17, 203, 0.8);
+            white-space: nowrap;
+            overflow: hidden;
+            width: 0;
+            animation: typing 3s steps(10) forwards, blink 0.75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 8ch; } /* Adjust according to the length of the text "Cobuild" */
+        }
+
+        @keyframes blink {
+            from, to { border-color: transparent; }
+             50% { border-color: rgba(106, 17, 203, 0.8); }
+        }
+
+        /* Hide loader when register form is visible */
+        body.loaded .loader {
+            display: none;
+        }
+
+        body.loaded .register-container {
+            display: block;
+        } 
+
         /* Add some responsive behavior */
         @media (max-width: 768px) {
             .register-container {
@@ -236,9 +297,16 @@ function sendEmail($to, $unique_code) {
                 font-size: 0.9rem;
             }
         }
+         
     </style>
 </head>
 <body>
+
+ <!-- Loader -->
+ <div class="loader">
+        <span>Cobuild</span>
+    </div>
+
     <div class="register-container text-center">
     <img src="../../../images/Cobuild_logo.png" alt="" class="img-fluid w-100 h-25 d-flex justify-center">
 
@@ -276,6 +344,13 @@ function sendEmail($to, $unique_code) {
 
     <!-- SweetAlert2 Logic -->
     <script>
+            // Simulate a loading time
+    window.addEventListener('load', function() {
+        setTimeout(() => {
+            document.body.classList.add('loaded');
+        }, 3000); // Delay for 3 seconds to display the loader animation
+    });
+
         var message = "<?php echo isset($message) ? $message : ''; ?>";
         var messageType = "<?php echo isset($message_type) ? $message_type : ''; ?>";
 
@@ -296,6 +371,7 @@ function sendEmail($to, $unique_code) {
                 text: message
             });
         }
+        
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>

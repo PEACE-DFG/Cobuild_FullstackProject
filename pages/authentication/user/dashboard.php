@@ -24,6 +24,7 @@ $dashboard_type = ($user['user_type'] == 'builder') ? 'builder' : 'investor';
 define('MAIN_DASHBOARD', true);
 // Initialize an array to store error messages
 $errors = [];
+
 // Function to handle profile image upload
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['profile-image'])) {
     $target_dir = "uploads/";
