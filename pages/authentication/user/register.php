@@ -177,59 +177,81 @@ function sendEmail($to, $unique_code) {
         .register-container {
             background-color: white;
             padding: 40px;
-            border-radius: 10px;
-            max-width: 450px;
+            border-radius: 15px;
+            max-width: 400px;
             width: 100%;
-            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
             position: relative;
+            display: none;
+            animation: fadeIn 0.5s ease-out forwards;
         }
 
-        .register-container h2 {
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo-container {
             text-align: center;
-            color: #333;
-            font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
-        .register-container input, .register-container select {
+        .logo-container img {
+            max-width: 180px;
+            height: auto;
+        }
+
+        h2 {
+            color: #333;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-control {
             border-radius: 50px;
             padding: 12px 20px;
             border: 1px solid #ddd;
-            transition: border-color 0.3s, box-shadow 0.3s;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
         }
 
-        .register-container input:focus, .register-container select:focus {
-            border-color: #6a11cb;
-            box-shadow: 0 0 10px rgba(106, 17, 203, 0.3);
+        .form-control:focus {
+            border-color: #4b0397;
+            box-shadow: 0 0 0 0.2rem rgba(75, 3, 151, 0.25);
         }
 
-        .register-container button {
-            background: linear-gradient(135deg, #6a11cb, #021f50);
-            color: white;
+        .btn-primary {
+            background: linear-gradient(135deg, #4b0397, #031c46);
             border: none;
-            padding: 12px;
-            font-size: 1rem;
             border-radius: 50px;
+            padding: 12px;
+            font-weight: 500;
             width: 100%;
-            transition: background-color 0.3s;
+            margin-top: 10px;
+            transition: transform 0.2s ease;
         }
 
-        .register-container button:hover {
-            background-color: #5a0fc7;
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(75, 3, 151, 0.3);
         }
 
         .footer-text {
             text-align: center;
-            color: #555;
+            margin-top: 20px;
+            color: #666;
         }
 
         .footer-text a {
-            color: #6a11cb;
+            color: #4b0397;
             text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
         }
 
         .footer-text a:hover {
-            text-decoration: underline;
+            color: #031c46;
         }
 
         /* Loader Styles */
@@ -308,23 +330,29 @@ function sendEmail($to, $unique_code) {
     </div>
 
     <div class="register-container text-center">
-    <img src="../../../images/Cobuild_logo.png" alt="" class="img-fluid w-100 h-25 d-flex justify-center">
-
+    <div class="logo-container">
+            <img src="../../../images/Cobuild_logo.png" alt="Cobuild Logo">
+        </div>
         <h2>User Registration</h2>
         <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="POST">
-            <div class="mb-2">
+           <div class="row">
+           <div class="col mb-2">
                 <input type="text" name="name" class="form-control" placeholder="Full Name" required>
             </div>
-            <div class="mb-2">
+            <div class="col mb-2">
                 <input type="email" name="email" class="form-control" placeholder="Email Address" required>
             </div>
-            <div class="mb-2">
+           </div>
+          <div class="row">
+          <div class="col mb-2">
                 <input type="password" name="password" class="form-control" placeholder="Password" required>
             </div>
-            <div class="mb-2">
+            <div class=" col mb-2">
                 <input type="password" name="confirm_password" class="form-control" placeholder="Repeat Password" required>
             </div>
-            <div class="mb-2">
+          </div>
+        <div class="row">
+        <div class="mb-2">
                 <input type="tel" name="phone_number" class="form-control" placeholder="Phone Number" required>
             </div>
             <div class="mb-2">
@@ -334,6 +362,7 @@ function sendEmail($to, $unique_code) {
                     <option value="investor">Investor</option>
                 </select>
             </div>
+        </div>
             <button type="submit" class="btn btn-primary">Register</button>
         </form>
 

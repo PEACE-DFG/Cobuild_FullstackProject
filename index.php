@@ -41,13 +41,17 @@ if (isset($_SESSION['user_id'])) {
 	<!-- Magnific Popup -->
 	<link rel="stylesheet" href="css/magnific-popup.css">
 	<!-- Owl Carousel  -->
-	<link rel="stylesheet" href="css/owl.carousel.min.css">
+	<!-- <link rel="stylesheet" href="css/owl.carousel.min.css"> -->
 	<link rel="stylesheet" href="css/owl.theme.default.min.css">
 	<!-- Flexslider -->
-	<link rel="stylesheet" href="css/flexslider.css">
+	<!-- <link rel="stylesheet" href="css/flexslider.css"> -->
 	<!-- Theme style  -->
 	<link rel="stylesheet" href="css/style.css">
+<!-- For FlexSlider -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flexslider/2.7.2/flexslider.min.css">
 
+<!-- For Owl Carousel -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
 	<!-- Modernizr JS -->
 	<script src="js/modernizr-2.6.2.min.js"></script>
 
@@ -163,11 +167,11 @@ if (isset($_SESSION['user_id'])) {
 	</head>
 	<body>
 		
-	<div class="gtco-loader"></div>
+<div class="gtco-loader"></div>
 	
 
 	
-	<div id="page">
+<div id="page">
 
 
 <nav class="gtco-nav" role="navigation">
@@ -214,80 +218,73 @@ if (isset($_SESSION['user_id'])) {
     </div>
 </nav>
 
-<script>
-    // Function to navigate to the login page
-    document.getElementById('signInButton').addEventListener('click', function() {
-        window.location.href = 'pages/authentication/user/login.php';
-    });
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+    // Define your URLs
+    const urls = {
+        login: 'pages/authentication/user/login.php',
+        register: 'pages/authentication/user/register.php',
+        logout: 'pages/authentication/user/logout.php',
+        dashboard: 'pages/authentication/user/dashboard.php' // Replace with your actual dashboard URL
+    };
 
-    // Function to navigate to the registration page
-    document.getElementById('signUpButton').addEventListener('click', function() {
-        window.location.href = 'pages/authentication/user/register.php';
-    });
-</script>
-<script>
-document.getElementById('logoutButton').addEventListener('click', function(event) {
-    event.preventDefault(); // Prevent the default link behavior
-
-    // Display a confirmation dialog using SweetAlert
-    Swal.fire({
-        title: 'Are you sure?',
-        text: "You will be logged out!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, log me out!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Create a form to send POST request to logout.php
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = 'pages/authentication/user/logout.php';
-
-            // Create a hidden input to signal logout confirmation
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'confirm_logout';
-            input.value = 'yes';
-
-            form.appendChild(input);
-            document.body.appendChild(form);
-
-            // Submit the form, logging out the user
-            form.submit();
+    // Helper function to safely add click handlers
+    function addClickHandler(elementId, action) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.addEventListener('click', action);
         }
+    }
+
+    // Sign In Button Handler
+    addClickHandler('signInButton', function() {
+        window.location.href = urls.login;
     });
-});
-</script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Function to navigate to the Dashboard page
-        document.getElementById('dashboardLink').addEventListener('click', function() {
-            window.location.href = dashboardLink;
-        });
 
-        // Existing navigation for Sign In and Sign Up buttons
-        document.getElementById('signInButton').addEventListener('click', function() {
-            window.location.href = 'pages/authentication/user/login.php';
-        });
+    // Sign Up Button Handler
+    addClickHandler('signUpButton', function() {
+        window.location.href = urls.register;
+    });
 
-        document.getElementById('signUpButton').addEventListener('click', function() {
-            window.location.href = 'pages/authentication/user/register.php';
+    // Dashboard Link Handler
+    addClickHandler('dashboardLink', function() {
+        window.location.href = urls.dashboard;
+    });
+
+    // Logout Button Handler
+    addClickHandler('logoutButton', function(event) {
+        event.preventDefault();
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You will be logged out!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, log me out!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Create and submit logout form
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = urls.logout;
+
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'confirm_logout';
+                input.value = 'yes';
+
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
+            }
         });
     });
-</script>
-
-
-
+		});
+	</script>
 
 	<section id="gtco-hero" class="gtco-cover" data-section="home" data-stellar-background-ratio="0.5">
-    <!-- Background Video -->
-    <!-- <video autoplay muted loop playsinline id="background-video">
-        <source src="images/cobuild_back1.mp4" type="video/mp4">
-        Your browser does not support the video tag.
-    </video> -->
-
     <!-- Overlay -->
     <div class="overlay"></div>
 
@@ -748,6 +745,11 @@ document.getElementById('logoutButton').addEventListener('click', function(event
 
 	<script src="js/main.js"></script>
 	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+    // Trigger a resize event after page loads
+    window.dispatchEvent(new Event('resize'));
+});
+
 		document.addEventListener('DOMContentLoaded', function () {
 			const counters = document.querySelectorAll('.count');
 			const speed = 200; // Adjust the speed for counting

@@ -80,3 +80,9 @@ ALTER TABLE users ADD COLUMN unique_code VARCHAR(10) UNIQUE;
     unique_code VARCHAR(10) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+
+ALTER TABLE users 
+ADD COLUMN reset_code_expiry DATETIME NULL;
+
+

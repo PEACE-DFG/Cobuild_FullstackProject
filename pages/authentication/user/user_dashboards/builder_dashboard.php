@@ -283,7 +283,7 @@ ob_end_flush();
 <!-- Rest of your HTML code remains the same -->
 <!-- Dashboard Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Builder Dashboard</h2>
+    <h2>Developer Dashboard</h2>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newProjectModal">
         Create New Project
     </button>
