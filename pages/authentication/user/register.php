@@ -358,7 +358,7 @@ function sendEmail($to, $unique_code) {
             <div class="mb-2">
                 <select name="user_type" class="form-control" required>
                     <option value="" disabled selected>Select Type</option>
-                    <option value="builder">Builder</option>
+                    <option value="developer">Developer</option>
                     <option value="investor">Investor</option>
                 </select>
             </div>

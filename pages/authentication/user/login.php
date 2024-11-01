@@ -18,82 +18,141 @@ function generateResetCode($length = 8) {
 }
 
 // Function to send email using PHPMailer
-function sendResetEmail($to, $resetCode) {
+function sendEmail($to, $subject, $content) {
     $mail = new PHPMailer(true);
 
     try {
         // Server settings
         $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';  // Use your SMTP server
+        $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'Officialcobuild@gmail.com';  // Your email
-        $mail->Password = 'udodjurhumdfrsim'; // Your App Password or SMTP password
+        $mail->Username = 'Officialcobuild@gmail.com';
+        $mail->Password = 'udodjurhumdfrsim';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
+        
         // Recipients
         $mail->setFrom('support@cobuild.com', 'Cobuild Support');
         $mail->addAddress($to);
+        
         // Content
         $mail->isHTML(true);
-        $mail->Subject = 'Password Reset - Cobuild';
-        $mail->addEmbeddedImage('../../../images/Cobuild_logo.png', 'logo_img'); // Local path and CID
-
-        $mail->Body = "
-        <html>
-        <head>
-            <style>
-                body {
-                    font-family: Arial, sans-serif; 
-                    line-height: 1.6; 
-                    color: #333; 
-                    max-width: 600px; 
-                    margin: 0 auto; 
-                    padding: 20px;
-                }
-                h2 {
-                    color: #4b0397;
-                }
-                .reset-code {
-                    background-color: #f4f4f4; 
-                    padding: 15px; 
-                    margin: 20px 0; 
-                    text-align: center;
-                }
-                .code {
-                    color: #031c46; 
-                    margin: 0;
-                }
-                hr {
-                    border: 1px solid #eee; 
-                    margin: 20px 0;
-                }
-                p.footer {
-                    font-size: 12px; 
-                    color: #666;
-                }
-            </style>
-        </head>
-        <body>
-           <div style='background: blue; padding: 20px; text-align: center;'>
-                    <img src='cid:logo_img' alt='Cobuild' style='max-width: 200px;'>
-                </div>
-            <h2>Password Reset Request</h2>
-            <p>You have requested to reset your password. Please use the following code to complete your password reset:</p>
-            <div class='reset-code'>
-                <h3 class='code'>{$resetCode}</h3>
-            </div>
-            <p>This code will expire in 1 hour for security purposes. Also use the same generated unique code, which was sent to your mail upon registeration to login to login.    </p>
-            <p>If you didn't request this reset, please ignore this email or contact support if you have concerns.</p>
-            <hr>
-            <p class='footer'>This is an automated email, please do not reply.</p>
-        </body>
-        </html>";
+        $mail->Subject = $subject;
+        $mail->addEmbeddedImage('../../../images/Cobuild_logo.png', 'logo_img');
+        $mail->Body = $content;
 
         return $mail->send();
     } catch (Exception $e) {
         error_log("Mail Error: {$mail->ErrorInfo}");
         return false;
     }
+}
+
+// Function to generate reset email content
+function getResetEmailContent($resetCode) {
+    return "
+    <html>
+    <head>
+        <style>
+            body {
+                font-family: Arial, sans-serif; 
+                line-height: 1.6; 
+                color: #333; 
+                max-width: 600px; 
+                margin: 0 auto; 
+                padding: 20px;
+            }
+            h2 {
+                color: #4b0397;
+            }
+            .reset-code {
+                background-color: #f4f4f4; 
+                padding: 15px; 
+                margin: 20px 0; 
+                text-align: center;
+            }
+            .code {
+                color: #031c46; 
+                margin: 0;
+            }
+            hr {
+                border: 1px solid #eee; 
+                margin: 20px 0;
+            }
+            p.footer {
+                font-size: 12px; 
+                color: #666;
+            }
+        </style>
+    </head>
+    <body>
+        <div style='background: blue; padding: 20px; text-align: center;'>
+            <img src='cid:logo_img' alt='Cobuild' style='max-width: 200px;'>
+        </div>
+        <h2>Password Reset Request</h2>
+        <p>You have requested to reset your password. Please use the following code to complete your password reset:</p>
+        <div class='reset-code'>
+            <h3 class='code'>{$resetCode}</h3>
+        </div>
+        <p>This code will expire in 1 hour for security purposes. Also use the same generated unique code, which was sent to your mail upon registeration to login.</p>
+        <p>If you didn't request this reset, please ignore this email or contact support if you have concerns.</p>
+        <hr>
+        <p class='footer'>This is an automated email, please do not reply.</p>
+    </body>
+    </html>";
+}
+
+// Function to generate confirmation email content
+function getConfirmationEmailContent() {
+    return "
+    <html>
+    <head>
+        <style>
+            body {
+                font-family: Arial, sans-serif; 
+                line-height: 1.6; 
+                color: #333; 
+                max-width: 600px; 
+                margin: 0 auto; 
+                padding: 20px;
+            }
+            h2 {
+                color: #4b0397;
+            }
+            .message {
+                background-color: #f4f4f4; 
+                padding: 15px; 
+                margin: 20px 0; 
+                text-align: center;
+            }
+            hr {
+                border: 1px solid #eee; 
+                margin: 20px 0;
+            }
+            p.footer {
+                font-size: 12px; 
+                color: #666;
+            }
+        </style>
+    </head>
+    <body>
+        <div style='background: blue; padding: 20px; text-align: center;'>
+            <img src='cid:logo_img' alt='Cobuild' style='max-width: 200px;'>
+        </div>
+        <h2>Password Changed Successfully</h2>
+        <div class='message'>
+            <p>Your password has been successfully updated. If you did not make this change, please contact our support team immediately.</p>
+        </div>
+        <p>For security reasons, you may want to:</p>
+        <ul>
+            <li>Log out of all devices</li>
+            <li>Review your recent account activity</li>
+            <li>Update your security questions if necessary</li>
+        </ul>
+        <hr>
+        <p class='footer'>This is an automated email, please do not reply.</p>
+    </body>
+    </html>";
 }
 
 // Handle password reset request
@@ -128,11 +187,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action'])) {
             }
 
             // Send reset email
-            if (!sendResetEmail($email, $resetCode)) {
+            if (!sendEmail($email, 'Password Reset - Cobuild', getResetEmailContent($resetCode))) {
                 throw new Exception('Failed to send reset email');
             }
 
-            // Successful response
             echo json_encode(['status' => 'success', 'message' => 'Reset instructions sent to your email']);
             exit;
 
@@ -170,6 +228,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action'])) {
             
             if (!$updateStmt->execute()) {
                 throw new Exception('Failed to update password');
+            }
+
+            // Send confirmation email
+            if (!sendEmail($email, 'Password Changed - Cobuild', getConfirmationEmailContent())) {
+                error_log("Failed to send confirmation email to {$email}");
+                // Don't throw exception here as password was successfully changed
             }
 
             echo json_encode(['status' => 'success', 'message' => 'Password updated successfully']);

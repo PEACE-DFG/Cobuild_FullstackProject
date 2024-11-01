@@ -19,49 +19,14 @@ if (!$user) {
     exit();
 }
 // Check user type and load appropriate dashboard
-$dashboard_type = ($user['user_type'] == 'builder') ? 'builder' : 'investor';
+$dashboard_type = ($user['user_type'] == 'developer') ? 'developer' : 'investor';
 // Define MAIN_DASHBOARD to include builder_dashboard.php correctly
 define('MAIN_DASHBOARD', true);
 // Initialize an array to store error messages
 $errors = [];
 
-// Function to handle profile image upload
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['profile-image'])) {
-    $target_dir = "uploads/";
-    $target_file = $target_dir . basename($_FILES["profile-image"]["name"]);
-    $uploadOk = 1;
-    $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-    // Check if image file is an actual image or fake image
-    $check = getimagesize($_FILES["profile-image"]["tmp_name"]);
-    if ($check === false) {
-        $errors[] = "File is not an image.";
-        $uploadOk = 0;
-    }
-    // Check file size
-    if ($_FILES["profile-image"]["size"] > 500000) { // 500KB limit
-        $errors[] = "Sorry, your file is too large.";
-        $uploadOk = 0;
-    }
-    // Allow certain file formats
-    if (!in_array($imageFileType, ["jpg", "png", "jpeg", "gif"])) {
-        $errors[] = "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
-        $uploadOk = 0;
-    }
-    // Check if $uploadOk is set to 0 by an error
-    if ($uploadOk == 0) {
-        $errors[] = "Sorry, your file was not uploaded.";
-    } else {
-        // If everything is ok, try to upload the file
-        if (move_uploaded_file($_FILES["profile-image"]["tmp_name"], $target_file)) {
-            // Update user profile with the new image path
-            $stmt = $conn->prepare("UPDATE users SET profile_image = ? WHERE id = ?");
-            $stmt->bind_param("si", $target_file, $user_id);
-            $stmt->execute();
-        } else {
-            $errors[] = "Sorry, there was an error uploading your file.";
-        }
-    }
-}
+
+
 ob_end_flush();
 
 ?>
@@ -301,49 +266,50 @@ document.getElementById('logoutButton').addEventListener('click', function(event
         </nav>
 
         <?php
-        if ($dashboard_type == 'builder') {
+        if ($dashboard_type == 'developer') {
             include 'user_dashboards/builder_dashboard.php';
         } else {
             include 'user_dashboards/investor_dashboard.php';
         }
         ?>
     </div>
-
-    <!-- Profile Modal -->
-    <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="profileModalLabel">Edit Profile</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                <form method="POST" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label for="profile-name" class="form-label">Name</label>
-                            <input type="text" class="form-control" id="profile-name" name="profile-name" value="<?php echo htmlspecialchars($user['name']); ?>">
-                        </div>
-                        <div class="mb-3">
-                            <label for="profile-email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="profile-email" name="profile-email" value="<?php echo htmlspecialchars($user['email']); ?>">
-                        </div>
-                        <div class="mb-3">
-                            <label for="profile-password" class="form-label">New Password</label>
-                            <input type="password" class="form-control" id="profile-password" name="profile-password">
-                        </div>
-                        <div class="mb-3">
-                            <label for="profile-image" class="form-label">Profile Image</label>
-                            <input type="file" class="form-control" id="profile-image" name="profile-image">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Update</button>
-                </div>
+<!-- Profile Modal -->
+<div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="profileModalLabel">Edit Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <div class="modal-body">
+                <form id="profile-form" method="POST" enctype="multipart/form-data"  onsubmit="submitProfileForm(event)">
+                    <div class="mb-3">
+                        <label for="profile-name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="profile-name" name="profile-name" value="<?php echo htmlspecialchars($user['name']); ?>" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="profile-email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="profile-email" name="profile-email" value="<?php echo htmlspecialchars($user['email']); ?>" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="profile-password" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="profile-password" name="profile-password" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="profile-image" class="form-label">Profile Image</label>
+                        <input type="file" class="form-control" id="profile-image" name="profile-image" disabled>
+                    </div>
+
+                    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary" disabled>Update</button>
+    </div>
+                </form>
+            </div>
+       
         </div>
     </div>
+</div>
 
     <footer>
         <p>&copy; 2024 Cobuild. All rights reserved. Designed By CODEMaster</p>
@@ -367,6 +333,42 @@ document.getElementById('logoutButton').addEventListener('click', function(event
             sidebar.classList.remove('active');
             backdrop.style.display = 'none';
         });
+ 
+        function submitProfileForm(event) {
+    event.preventDefault();
+    
+    // Fix the selector to match your form ID
+    const form = new FormData(document.querySelector('#profile-form'));
+
+    fetch(window.location.href, {
+        method: 'POST',
+        body: form
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Profile updated successfully!',
+                text: data.message
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Update failed',
+                text: data.message
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Update failed',
+            text: 'An unexpected error occurred.'
+        });
+    });
+}
     </script>
 <?php
 if (!empty($errors)) {

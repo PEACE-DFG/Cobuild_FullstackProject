@@ -33,7 +33,7 @@ if (!$user_id) {
 }
 
 // Verify user is a builder
-$stmt = $conn->prepare("SELECT user_type FROM users WHERE id = ? AND user_type = 'builder'");
+$stmt = $conn->prepare("SELECT user_type FROM users WHERE id = ? AND user_type = 'Developer'");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
