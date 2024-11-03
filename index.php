@@ -1,17 +1,3 @@
-<?php
-ob_start();
-session_start();
-
-if (isset($_SESSION['user_id'])) {
-	// Define dashboard link if user is logged in
-	echo "<script>var dashboardLink = 'pages/authentication/user/dashboard.php';</script>";
-} else {
-	// Redirect to login if user is not logged in
-	echo "<script>var dashboardLink = 'pages/authentication/user/login.php';</script>";
-}
-
-?>
-
 <!DOCTYPE HTML>
 <html>
 	<head>
@@ -172,7 +158,19 @@ if (isset($_SESSION['user_id'])) {
 
 	
 <div id="page">
+<?php
+ob_start();
+session_start();
 
+if (isset($_SESSION['user_id'])) {
+	// Define dashboard link if user is logged in
+	echo "<script>var dashboardLink = 'pages/authentication/user/dashboard.php';</script>";
+} else {
+	// Redirect to login if user is not logged in
+	echo "<script>var dashboardLink = 'pages/authentication/user/login.php';</script>";
+}
+
+?>
 
 <nav class="gtco-nav" role="navigation">
     <div class="container">
