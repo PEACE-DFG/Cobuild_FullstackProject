@@ -90,39 +90,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $title = getPostValue('title');
                 $description = getPostValue('description');
                 $location = getPostValue('location');
+                $investment_goal = getPostValue('investment_goal');  // Make sure investment goal is captured
+
                 
                 // Validate required fields
-                if (empty($title) || empty($description) || empty($location)) {
-                    throw new Exception("All fields are required");
+                if (empty($title) || empty($description) || empty($location)|| empty($investment_goal)) {
+                    throw new Exception("All fields are required, including investment goal");
                 }
 
+                   // Ensure land title document is provided
+        if (!isset($_FILES['land_title']) || $_FILES['land_title']['error'] !== 0) {
+            throw new Exception("Land title document is required");
+        }
                 // Handle land title document upload
                 $land_title_document = isset($_FILES['land_title']) ? handleFileUpload($_FILES['land_title']) : '';
 
-                // Insert project with correct enum values
                 $stmt = $conn->prepare("
-                    INSERT INTO projects (
-                        builder_id, 
-                        title, 
-                        description, 
-                        location, 
-                        status,
-                        land_title_document,
-                        verification_status,
-                        verification_fee_paid
-                    ) VALUES (?, ?, ?, ?, 'pending', ?, 'unverified', FALSE)
-                ");
-
+                INSERT INTO projects (
+                    builder_id, 
+                    title, 
+                    description, 
+                    location,
+                    investment_goal,
+                    status,
+                    land_title_document,
+                    verification_status,
+                    verification_fee_paid,
+                    current_stage
+                ) VALUES (?, ?, ?, ?, ?, 'pending', ?, 'unverified', FALSE, 'planning')
+            ");
                 if (!$stmt) {
                     throw new Exception("Failed to prepare statement: " . $conn->error);
                 }
 
                 $stmt->bind_param(
-                    "issss",
+                    "isssss",
                     $user_id,
                     $title,
                     $description,
                     $location,
+                    $investment_goal,
                     $land_title_document
                 );
 
@@ -385,6 +392,7 @@ ob_end_flush();
                             <td>
                                 <button class="btn btn-primary btn-sm" onclick="editProject(<?php echo $project['id']; ?>)">Edit</button>
                                 <button class="btn btn-success btn-sm" onclick="verifyProject(<?php echo $project['id']; ?>)">Verify</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteProject(<?php echo $project['id']; ?>)">Delete</button>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -396,6 +404,43 @@ ob_end_flush();
 </div>
 
 <!-- Modals -->
+ <!-- Edit Project Modal -->
+<div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProjectModalLabel">Edit Project</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editProjectForm">
+                    <input type="hidden" id="edit_project_id" name="project_id">
+                    <input type="hidden" name="action" value="edit_project">
+                    <div class="mb-3">
+                        <label for="edit_title" class="form-label">Project Title</label>
+                        <input type="text" class="form-control" id="edit_title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="edit_description" name="description" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="edit_location" name="location" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_investment_goal" class="form-label">Investment Goal</label>
+                        <input type="number" class="form-control" id="edit_investment_goal" name="investment_goal" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveProjectChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="modal fade" id="newProjectModal" tabindex="-1" aria-labelledby="newProjectModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -423,7 +468,7 @@ ob_end_flush();
                         <input type="number" class="form-control" id="investment_goal" name="investment_goal" required>
                     </div>
                     <div class="mb-3">
-                        <label for="land_title" class="form-label">Land Title Document (optional)</label>
+                        <label for="land_title" class="form-label">Land Title Document (Required)</label>
                         <input type="file" class="form-control" id="land_title" name="land_title">
                     </div>
                 </div>
@@ -530,6 +575,93 @@ ob_end_flush();
     function editProject(projectId) {
         // Redirect to the edit project page or show modal for editing
         window.location.href = 'edit_project.php?id=' + projectId;
+    }
+
+
+    function editProject(projectId) {
+        // Fetch project details
+        fetch('./ajax/get_project.php?id=' + projectId)
+            .then(response => response.json())
+            .then(project => {
+                // Populate the modal
+                document.getElementById('edit_project_id').value = project.id;
+                document.getElementById('edit_title').value = project.title;
+                document.getElementById('edit_description').value = project.description;
+                document.getElementById('edit_location').value = project.location;
+                document.getElementById('edit_investment_goal').value = project.investment_goal;
+                
+                // Show the modal
+                new bootstrap.Modal(document.getElementById('editProjectModal')).show();
+            })
+            .catch(error => {
+                Swal.fire('Error', 'Failed to load project details', 'error');
+            });
+    }
+
+    function saveProjectChanges() {
+        const form = document.getElementById('editProjectForm');
+        const formData = new FormData(form);
+
+        fetch('ajax/update_project.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Project updated successfully',
+                    icon: 'success'
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                throw new Error(data.message || 'Update failed');
+            }
+        })
+        .catch(error => {
+            Swal.fire('Error', error.message, 'error');
+        });
+    }
+
+    function deleteProject(projectId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('ajax/delete_project.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'project_id=' + projectId
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire(
+                            'Deleted!',
+                            'Project has been deleted.',
+                            'success'
+                        ).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        throw new Error(data.message || 'Deletion failed');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire('Error', error.message, 'error');
+                });
+            }
+        });
     }
 
     function verifyProject(projectId) {

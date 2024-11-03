@@ -86,3 +86,33 @@ ALTER TABLE users
 ADD COLUMN reset_code_expiry DATETIME NULL;
 
 
+CREATE TABLE project_updates (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    project_id INT NOT NULL,
+    user_id INT NOT NULL,
+    update_text TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (project_id) REFERENCES projects(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE project_stages (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    project_id INT NOT NULL,
+    stage_name VARCHAR(50) NOT NULL,
+    completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_by INT NOT NULL,
+    FOREIGN KEY (project_id) REFERENCES projects(id),
+    FOREIGN KEY (completed_by) REFERENCES users(id)
+);
+
+CREATE TABLE project_milestones (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    project_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    due_date DATE NOT NULL,
+    status ENUM('pending', 'completed', 'delayed') DEFAULT 'pending',
+    completed_at TIMESTAMP NULL,
+    FOREIGN KEY (project_id) REFERENCES projects(id)
+);
