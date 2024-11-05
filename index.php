@@ -48,7 +48,19 @@
 	<script src="js/respond.min.js"></script>
 	<![endif]-->
 	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3.10.0/dist/email.min.js"></script>
+	<?php
+ob_start();
+session_start();
 
+if (isset($_SESSION['user_id'])) {
+	// Define dashboard link if user is logged in
+	echo "<script>var dashboardLink = 'pages/authentication/user/dashboard.php';</script>";
+} else {
+	// Redirect to login if user is not logged in
+	echo "<script>var dashboardLink = 'pages/authentication/user/login.php';</script>";
+}
+
+?>
 
 	<style>
 		.icon {
@@ -147,6 +159,74 @@
 		font-size: 18px;
 		padding-top:5px;
 	}
+	.video-section {
+  background: linear-gradient(rgb(0, 0, 0, 0.8), rgb(0, 0, 0, 0.8)),
+    url(https://gagadget.com/media/post_big/YouTube_bV8p7RZ.jpg) no-repeat fixed
+      center;
+  height: 250px;
+  background-size: cover;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+.video-overlay {
+  background: var(--dark);
+}
+.video-section h2 {
+  font-weight: 600;
+  font-size: 38px;
+  background-color: var(--dark);
+  padding-top: 15px;
+  color: var(--primary);
+	padding-top:40px;
+}
+.video-section i {
+  display: block;
+  position: relative;
+  width: 70px;
+  height: 70px;
+  border-radius: 100px;
+  background: #ffffff;
+  color: var(--primary);
+  font-size: 30px;
+  line-height: 70px;
+  margin: 0 auto;
+  cursor: pointer;
+}
+.video-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-content: center !important;
+  -ms-flex-line-pack: center !important;
+  -ms-flex-align: center !important;
+  align-items: center !important;
+  -ms-flex-pack: center !important;
+  justify-content: center !important;
+}
+.video-popup .video-src {
+  position: relative;
+  width: 700px;
+  max-width: 80%;
+}
+.video-popup .iframe-src {
+  width: 100%;
+  height: 0;
+  padding-top: 56.3%;
+  position: relative;
+  display: none;
+}
+.video-popup .iframe-src iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
 
 	</style>
 
@@ -155,22 +235,8 @@
 		
 <div class="gtco-loader"></div>
 	
-
-	
 <div id="page">
-<?php
-ob_start();
-session_start();
 
-if (isset($_SESSION['user_id'])) {
-	// Define dashboard link if user is logged in
-	echo "<script>var dashboardLink = 'pages/authentication/user/dashboard.php';</script>";
-} else {
-	// Redirect to login if user is not logged in
-	echo "<script>var dashboardLink = 'pages/authentication/user/login.php';</script>";
-}
-
-?>
 
 <nav class="gtco-nav" role="navigation">
     <div class="container">
@@ -347,6 +413,26 @@ if (isset($_SESSION['user_id'])) {
 			</div>
 		</div>
 	</section>
+	     <!-------Video Start------->
+			 <section class="video-section prelative text-center white py-5">
+                <div class="section-padding video-overlay">
+                  <div class="container">
+                    <h2 style="color:orange">Watch Now</h2>
+                    <i class="fa fa-play fa-fade" id="video-icon" aria-hidden="true"></i>
+                    <div class="video-popup">
+                      <div class="video-src">
+                        <div class="iframe-src">
+                          <iframe
+                            src="https://www.youtube.com/embed/E0ciDUHEwSo?si=h7EVmeHLB8OqWftU"
+                            allowfullscreen
+                          ></iframe>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+              <!-------Video End------->
 	<section id="gtco-our-team" data-section="">
 		<div class="container">
 			<div class="row row-pb-md">
@@ -854,6 +940,24 @@ function sendEmail(event) {
 		});
 });
 }
+
+$(document).ready(function (e) {
+  $("#video-icon").on("click", function (e) {
+    e.preventDefault();
+    $(".video-popup").css("display", "flex");
+    $(".iframe-src").slideDown();
+  });
+  $(".video-popup").on("click", function (e) {
+    var $target = e.target.nodeName;
+    var video_src = $(this).find("iframe").attr("src");
+    if ($target != "IFRAME") {
+      $(".video-popup").fadeOut();
+      $(".iframe-src").slideUp();
+      $(".video-popup iframe").attr("src", " ");
+      $(".video-popup iframe").attr("src", video_src);
+    }
+  });
+});
 	</script>
 	
 

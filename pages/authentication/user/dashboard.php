@@ -26,10 +26,11 @@ define('MAIN_DASHBOARD', true);
 $errors = [];
 
 
-
 ob_end_flush();
 
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,6 +45,8 @@ ob_end_flush();
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Custom Styles -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- paystack -->
+    <script src="https://js.paystack.co/v1/inline.js"></script>
     <style>
         :root {
             --primary-blue: #040b90;
@@ -283,23 +286,22 @@ document.getElementById('logoutButton').addEventListener('click', function(event
             </div>
             <div class="modal-body">
                 <form id="profile-form" method="POST" enctype="multipart/form-data"  onsubmit="submitProfileForm(event)">
-                    <div class="mb-3">
-                        <label for="profile-name" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="profile-name" name="profile-name" value="<?php echo htmlspecialchars($user['name']); ?>" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label for="profile-email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="profile-email" name="profile-email" value="<?php echo htmlspecialchars($user['email']); ?>" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label for="profile-password" class="form-label">New Password</label>
-                        <input type="password" class="form-control" id="profile-password" name="profile-password" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label for="profile-image" class="form-label">Profile Image</label>
-                        <input type="file" class="form-control" id="profile-image" name="profile-image" disabled>
-                    </div>
-
+                <div class="mb-3">
+    <label for="profile-name" class="form-label">Name</label>
+    <input type="text" class="form-control" id="profile-name" name="profile-name" value="<?php echo htmlspecialchars($user['name']); ?>">
+</div>
+<div class="mb-3">
+    <label for="profile-email" class="form-label">Email</label>
+    <input type="email" class="form-control" id="profile-email" name="profile-email" value="<?php echo htmlspecialchars($user['email']); ?>">
+</div>
+<div class="mb-3">
+    <label for="profile-password" class="form-label">New Password</label>
+    <input type="password" class="form-control" id="profile-password" name="profile-password">
+</div>
+<div class="mb-3">
+    <label for="profile-image" class="form-label">Profile Image</label>
+    <input type="file" class="form-control" id="profile-image" name="profile-image">
+</div>
                     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="submit" class="btn btn-primary" disabled>Update</button>
@@ -312,7 +314,10 @@ document.getElementById('logoutButton').addEventListener('click', function(event
 </div>
 
     <footer>
-        <p>&copy; 2024 Cobuild. All rights reserved. Designed By CODEMaster</p>
+        <p>
+            <small class="block">&copy; 2024 Cobuild. All rights reserved.Designed by <a href="https://github.com/PEACE-DFG" target="_blank">CODEMaster</a></small>
+
+        </p>
     </footer>
 
     <!-- Bootstrap JS and dependencies -->
@@ -337,26 +342,38 @@ document.getElementById('logoutButton').addEventListener('click', function(event
         function submitProfileForm(event) {
     event.preventDefault();
     
-    // Fix the selector to match your form ID
-    const form = new FormData(document.querySelector('#profile-form'));
-
+    const form = document.getElementById('profile-form');
+    const formData = new FormData(form);
+    
+    // Add X-Requested-With header to identify AJAX request
     fetch(window.location.href, {
         method: 'POST',
-        body: form
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             Swal.fire({
                 icon: 'success',
-                title: 'Profile updated successfully!',
+                title: 'Success!',
                 text: data.message
+            }).then(() => {
+                // Reload the page to show updated profile
+                window.location.reload();
             });
         } else {
             Swal.fire({
                 icon: 'error',
-                title: 'Update failed',
-                text: data.message
+                title: 'Error',
+                text: data.message || 'An error occurred while updating your profile.'
             });
         }
     })
@@ -364,8 +381,8 @@ document.getElementById('logoutButton').addEventListener('click', function(event
         console.error('Error:', error);
         Swal.fire({
             icon: 'error',
-            title: 'Update failed',
-            text: 'An unexpected error occurred.'
+            title: 'Error',
+            text: 'An unexpected error occurred while updating your profile.'
         });
     });
 }
