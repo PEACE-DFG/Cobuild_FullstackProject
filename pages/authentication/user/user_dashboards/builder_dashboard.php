@@ -1,15 +1,19 @@
 <?php
 ob_start();
-// Ensure this file is not accessed directly
 if (!defined('MAIN_DASHBOARD')) {
     die('Direct access not permitted');
 }
 require_once __DIR__ . '/../../../../vendor/autoload.php';
 
+
 $dotenv = Dotenv\Dotenv::createImmutable('../../../.');
+
 $dotenv->load();
-
-
+$env = parse_ini_file( __DIR__ . '/../../../../.env');
+function get_env($key){
+  global $env;
+  return $env[$key];
+} 
 require 'paystack_config.php';
 
 function initializePaystackPayment($email, $project_id, $amount = null) {
@@ -72,7 +76,6 @@ function verifyPaystackPayment($reference) {
     return json_decode($response, true);
 }
 
-
 // Add error reporting for debugging
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -81,7 +84,6 @@ ini_set('display_errors', 1);
 if (!isset($conn)) {
     require_once 'config/database.php';
 }
-
 // Verify database connection
 if (!$conn) {
     die("Database connection failed: " . mysqli_connect_error());
@@ -91,7 +93,6 @@ if (!$conn) {
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
 // Verify user session and user type
 $user_id = $_SESSION['user_id'] ?? null;
 if (!$user_id) {
@@ -99,7 +100,6 @@ if (!$user_id) {
     echo "<script>window.location.href = 'login.php';</script>";
     exit();
 }
-
 // Verify user is a builder
 $stmt = $conn->prepare("SELECT user_type FROM users WHERE id = ? AND user_type = 'Developer'");
 $stmt->bind_param("i", $user_id);
@@ -110,7 +110,6 @@ if ($result->num_rows === 0) {
     echo "<script>window.location.href = 'login.php';</script>";
     exit();
 }
-
 // Function to safely get POST values
 function getPostValue($key, $default = '') {
     return isset($_POST[$key]) ? trim($_POST[$key]) : $default;
@@ -218,7 +217,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 // Modify the verify_project action handler to ensure proper JSON response
+if ($action === 'verify_project') {
+    // Ensure we're sending JSON response
+    header('Content-Type: application/json');
+    
+    // Clear any existing output
+    ob_clean();
+    
+    $project_id = getPostValue('project_id');
+    
+    if (!$project_id) {
+        throw new Exception('Project ID is required');
+    }
 
+    // Verify project ownership
+    $stmt = $conn->prepare("SELECT * FROM projects WHERE id = ? AND builder_id = ?");
+    $stmt->bind_param("ii", $project_id, $user_id);
+    $stmt->execute();
+    $project = $stmt->get_result()->fetch_assoc();
+    
+    if (!$project) {
+        throw new Exception('Project not found or unauthorized');
+    }
+
+    // Get user email for payment
+    $stmt = $conn->prepare("SELECT email FROM users WHERE id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $user = $stmt->get_result()->fetch_assoc();
+
+    // Initialize Paystack payment
+    $payment = initializePaystackPayment($user['email'], $project_id);
+    
+    if (!$payment['status']) {
+        throw new Exception('Failed to initialize payment: ' . ($payment['message'] ?? 'Unknown error'));
+    }
+
+    echo json_encode([
+        'status' => true,
+        'message' => 'Payment initialized successfully',
+        'authorization_url' => $payment['data']['authorization_url']
+    ]);
+    exit;
+}
+
+// ... rest of your existing action handlers ...
+
+} catch (Exception $e) {
+if ($action === 'verify_project') {
+    header('Content-Type: application/json');
+    echo json_encode([
+        'status' => false,
+        'message' => $e->getMessage()
+    ]);
+    exit;
+} else {
+    $_SESSION['error_message'] = "Error: " . $e->getMessage();
+    echo "<script>window.location.href = 'dashboard.php';</script>";
+    exit();
+}
     } catch (Exception $e) {
         error_log("Error in builder dashboard: " . $e->getMessage());
         $_SESSION['error_message'] = "Error: " . $e->getMessage();
@@ -369,6 +426,10 @@ ob_end_flush();
         </div>
     </div>
 </div>
+<!-- information -->
+ <marquee behavior="" direction="">
+    <h5>Please Note that verification fee is Fifty Thousand Naira Only(50,000)</h5>
+ </marquee>
 
 <!-- Charts Section -->
 <div class="row mt-4">
@@ -538,274 +599,5 @@ ob_end_flush();
 
 <!-- Chart.js Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    <?php if (!empty($project_statuses)): ?>
-    var ctx1 = document.getElementById('projectStatusChart').getContext('2d');
-    var projectStatusChart = new Chart(ctx1, {
-        type: 'bar',
-        data: {
-            labels: <?php echo json_encode(array_column($project_statuses, 'status')); ?>,
-            datasets: [{
-                label: 'Projects',
-                data: <?php echo json_encode(array_column($project_statuses, 'count')); ?>,
-                backgroundColor: '#FF6384',
-                borderColor: '#FF6384',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            legend: {
-                display: false
-            },
-            title: {
-                display: true,
-                text: 'Project Status Overview'
-            },
-            scales: {
-                x: {
-                    beginAtZero: true
-                },
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-    <?php endif; ?>
-
-    <?php if (!empty($investment_types)): ?>
-    var ctx2 = document.getElementById('investmentTypesChart').getContext('2d');
-    var investmentTypesChart = new Chart(ctx2, {
-        type: 'bar',
-        data: {
-            labels: <?php echo json_encode(array_column($investment_types, 'investment_type')); ?>,
-            datasets: [{
-                label: 'Investments',
-                data: <?php echo json_encode(array_column($investment_types, 'count')); ?>,
-                backgroundColor: '#36A2EB',
-                borderColor: '#36A2EB',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            legend: {
-                display: false
-            },
-            title: {
-                display: true,
-                text: 'Investment Types Distribution'
-            },
-            scales: {
-                x: {
-                    beginAtZero: true
-                },
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-    <?php endif; ?>
-
-
-function verifyProject(projectId) {
-    // Get the Paystack public key and verification fee from data attributes or a global variable
-    const paystackPublicKey = window.paystackPublicKey; // This should be set elsewhere in your HTML
-    const verificationFee = window.verificationFee; // This should be set elsewhere in your HTML
-
-    Swal.fire({
-        title: 'Verification Fee',
-        text: 'A verification fee of ₦50 is required to process your verification request.',
-        icon: 'info',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Pay Now'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Initialize payment with error logging
-            fetch('dashboard.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: 'action=verify_project&project_id=' + projectId
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.text().then(text => {
-                        console.error('Server response:', text);
-                        throw new Error('Server response was not ok');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.status) {
-                    var handler = PaystackPop.setup({
-                        key: paystackPublicKey, // Use the variable instead of PHP
-                        email: data.email,
-                        amount: verificationFee, // Use the variable instead of PHP
-                        ref: data.reference,
-                        metadata: {
-                            project_id: projectId
-                        },
-                        callback: function(response) {
-                            // Verify payment with error logging
-                            fetch('dashboard.php', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/x-www-form-urlencoded'
-                                },
-                                body: 'action=verify_project&project_id=' + projectId + '&reference=' + response.reference
-                            })
-                            .then(response => {
-                                if (!response.ok) {
-                                    return response.text().then(text => {
-                                        console.error('Server response:', text);
-                                        throw new Error('Server response was not ok');
-                                    });
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                if (data.status) { // Changed from data.success to data.status to match PHP response
-                                    Swal.fire(
-                                        'Success!',
-                                        'Verification payment successful. Your project will be reviewed shortly.',
-                                        'success'
-                                    ).then(() => {
-                                        location.reload();
-                                    });
-                                } else {
-                                    throw new Error(data.message || 'Payment verification failed');
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error details:', error);
-                                Swal.fire('Error', error.message, 'error');
-                            });
-                        },
-                        onClose: function() {
-                            Swal.fire('Cancelled', 'Verification payment was cancelled', 'info');
-                        }
-                    });
-                    handler.openIframe();
-                } else {
-                    throw new Error(data.message || 'Failed to initialize payment');
-                }
-            })
-            .catch(error => {
-                console.error('Error details:', error);
-                Swal.fire('Error', error.message, 'error');
-            });
-        }
-    });
-}
-
-// Also modify the editProject function with error logging
-function editProject(projectId) {
-    fetch('./ajax/get_project.php?id=' + projectId)
-        .then(response => {
-            if (!response.ok) {
-                return response.text().then(text => {
-                    console.error('Server response:', text);
-                    throw new Error('Server response was not ok');
-                });
-            }
-            return response.json();
-        })
-        .then(project => {
-            document.getElementById('edit_project_id').value = project.id;
-            document.getElementById('edit_title').value = project.title;
-            document.getElementById('edit_description').value = project.description;
-            document.getElementById('edit_location').value = project.location;
-            document.getElementById('edit_investment_goal').value = project.investment_goal;
-            
-            new bootstrap.Modal(document.getElementById('editProjectModal')).show();
-        })
-        .catch(error => {
-            console.error('Error details:', error);
-            Swal.fire('Error', 'Failed to load project details', 'error');
-        });
-}
-
-// And modify the saveProjectChanges function
-function saveProjectChanges() {
-    const form = document.getElementById('editProjectForm');
-    const formData = new FormData(form);
-
-    fetch('ajax/update_project.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.text().then(text => {
-                console.error('Server response:', text);
-                throw new Error('Server response was not ok');
-            });
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            Swal.fire({
-                title: 'Success!',
-                text: 'Project updated successfully',
-                icon: 'success'
-            }).then(() => {
-                location.reload();
-            });
-        } else {
-            throw new Error(data.message || 'Update failed');
-        }
-    })
-    .catch(error => {
-        console.error('Error details:', error);
-        Swal.fire('Error', error.message, 'error');
-    });
-}
-
-    function deleteProject(projectId) {
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                fetch('ajax/delete_project.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: 'project_id=' + projectId
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire(
-                            'Deleted!',
-                            'Project has been deleted.',
-                            'success'
-                        ).then(() => {
-                            location.reload();
-                        });
-                    } else {
-                        throw new Error(data.message || 'Deletion failed');
-                    }
-                })
-                .catch(error => {
-                    Swal.fire('Error', error.message, 'error');
-                });
-            }
-        });
-    }
-
-</script>
+<?php
+require 'builder_logic.php';

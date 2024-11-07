@@ -64,6 +64,14 @@ $stmt = $conn->prepare("SELECT
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $monthly_trends = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+// Fetch projects added by all developers
+$stmt = $conn->prepare("SELECT 
+    *
+    FROM projects 
+    ORDER BY created_at DESC");
+$stmt->execute();
+$projects = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <h2 class="mb-4">Investor Dashboard</h2>
@@ -124,6 +132,43 @@ $monthly_trends = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     </div>
 </div>
 
+<h2 class="mb-4">Projects Overview</h2>
+
+<!-- Projects Table -->
+<div class="card mt-4">
+    <div class="card-body">
+        <h5 class="card-title">All Projects</h5>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                    <th>Deveoper Id</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                        <th>Date Added</th>
+                        <th>Verification Status</th>
+                        <th>Current Stage</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($projects as $project): ?>
+                    <tr>
+                    <td><?php echo htmlspecialchars($project['builder_id']); ?></td>
+                    <td><?php echo htmlspecialchars($project['title']); ?></td>
+                    <td><?php echo htmlspecialchars($project['description']); ?></td>
+                        <td><?php echo date('M d, Y', strtotime($project['created_at'])); ?></td>
+                        <td><?php echo ucfirst(htmlspecialchars($project['verification_status'])); ?></td>
+                        <td><?php echo htmlspecialchars($project['current_stage']); ?></td>
+                        <td><button class="btn btn-success">Invest</button></td>
+
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 <!-- Recent Investments Table -->
 <div class="card mt-4">
     <div class="card-body">
