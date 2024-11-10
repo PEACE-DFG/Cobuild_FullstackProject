@@ -115,19 +115,44 @@ function getPostValue($key, $default = '') {
     return isset($_POST[$key]) ? trim($_POST[$key]) : $default;
 }
 
-// Function to handle file upload
-function handleFileUpload($file) {
+// Function to handle multiple file uploads
+function handleMultipleFileUploads($files, $upload_dir) {
+    $uploaded_paths = [];
+    
+    foreach ($files['name'] as $key => $name) {
+        if ($files['error'][$key] === 0) {
+            $file_extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+            $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+            
+            if (!in_array($file_extension, $allowed_extensions)) {
+                throw new Exception("Invalid file type for image: $name");
+            }
+
+            $new_filename = uniqid() . '_' . basename($name);
+            $target_path = $upload_dir . $new_filename;
+
+            if (!move_uploaded_file($files['tmp_name'][$key], $target_path)) {
+                throw new Exception("Failed to upload image: $name");
+            }
+
+            $uploaded_paths[] = $target_path;
+        }
+    }
+    
+    return $uploaded_paths;
+}
+
+// Function to handle single file upload
+function handleSingleFileUpload($file, $upload_dir, $allowed_extensions) {
     if (!isset($file) || $file['error'] !== 0) {
-        return '';
+        throw new Exception("File upload is required");
     }
 
-    $upload_dir = 'uploads/land_titles/';
     if (!is_dir($upload_dir)) {
         mkdir($upload_dir, 0777, true);
     }
 
     $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    $allowed_extensions = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'];
     
     if (!in_array($file_extension, $allowed_extensions)) {
         throw new Exception("Invalid file type");
@@ -153,55 +178,121 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $conn->begin_transaction();
 
             try {
-                // Prepare project data
+                // Basic project information
                 $title = getPostValue('title');
+                $project_category = getPostValue('project_category');
                 $description = getPostValue('description');
                 $location = getPostValue('location');
-                $investment_goal = getPostValue('investment_goal');  // Make sure investment goal is captured
-
+                $investment_goal = getPostValue('investment_goal');
+                $total_project_cost = getPostValue('total_project_cost');
+                $projected_revenue = getPostValue('projected_revenue');
+                $projected_profit = getPostValue('projected_profit');
+                $building_materials = getPostValue('building_materials');
+                $developer_info = getPostValue('developer_info');
                 
+                // Handle investment types
+                $investment_types = isset($_POST['investment_types']) ? $_POST['investment_types'] : [];
+                $investment_types_json = json_encode($investment_types);
+
                 // Validate required fields
-                if (empty($title) || empty($description) || empty($location)|| empty($investment_goal)) {
-                    throw new Exception("All fields are required, including investment goal");
+                if (empty($title) || empty($description) || empty($location) || 
+                    empty($investment_goal) || empty($total_project_cost) || 
+                    empty($projected_revenue) || empty($projected_profit)) {
+                    throw new Exception("All required fields must be filled");
                 }
 
-                   // Ensure land title document is provided
-        if (!isset($_FILES['land_title']) || $_FILES['land_title']['error'] !== 0) {
-            throw new Exception("Land title document is required");
-        }
-                // Handle land title document upload
-                $land_title_document = isset($_FILES['land_title']) ? handleFileUpload($_FILES['land_title']) : '';
+                // Handle file uploads
+                $uploads_base = 'uploads/';
+                $land_titles_dir = $uploads_base . 'land_titles/';
+                $project_images_dir = $uploads_base . 'project_images/';
+                $featured_images_dir = $uploads_base . 'featured_images/';
 
+                // Handle land title document
+                $land_title_document = handleSingleFileUpload(
+                    $_FILES['land_title'],
+                    $land_titles_dir,
+                    ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png']
+                );
+
+                // Handle featured image
+                $featured_image = handleSingleFileUpload(
+                    $_FILES['featured_image'],
+                    $featured_images_dir,
+                    ['jpg', 'jpeg', 'png', 'gif']
+                );
+
+                // Insert project data
                 $stmt = $conn->prepare("
-                INSERT INTO projects (
-                    builder_id, 
-                    title, 
-                    description, 
-                    location,
-                    investment_goal,
-                    status,
-                    land_title_document,
-                    verification_status,
-                    verification_fee_paid,
-                    current_stage
-                ) VALUES (?, ?, ?, ?, ?, 'pending', ?, 'unverified', FALSE, 'planning')
-            ");
+                    INSERT INTO projects (
+                        builder_id,
+                        title,
+                        project_category,
+                        description,
+                        location,
+                        investment_goal,
+                        total_project_cost,
+                        projected_revenue,
+                        projected_profit,
+                        building_materials,
+                        developer_info,
+                        investment_types,
+                        status,
+                        land_title_document,
+                        featured_image,
+                        verification_status,
+                        verification_fee_paid,
+                        current_stage
+                    ) VALUES (
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+                        'pending', ?, ?, 'unverified', FALSE, 'planning'
+                    )
+                ");
+
                 if (!$stmt) {
                     throw new Exception("Failed to prepare statement: " . $conn->error);
                 }
 
                 $stmt->bind_param(
-                    "isssss",
+                    "issssddddsssss",
                     $user_id,
                     $title,
+                    $project_category,
                     $description,
                     $location,
                     $investment_goal,
-                    $land_title_document
+                    $total_project_cost,
+                    $projected_revenue,
+                    $projected_profit,
+                    $building_materials,
+                    $developer_info,
+                    $investment_types_json,
+                    $land_title_document,
+                    $featured_image
                 );
 
                 if (!$stmt->execute()) {
                     throw new Exception("Failed to create project: " . $stmt->error);
+                }
+
+                $project_id = $conn->insert_id;
+
+                // Handle additional images
+                if (isset($_FILES['additional_images']) && !empty($_FILES['additional_images']['name'][0])) {
+                    $additional_images = handleMultipleFileUploads($_FILES['additional_images'], $project_images_dir);
+                    
+                    // Insert additional images
+                    $image_stmt = $conn->prepare("
+                        INSERT INTO project_images (project_id, image_path, is_featured)
+                        VALUES (?, ?, FALSE)
+                    ");
+
+                    foreach ($additional_images as $image_path) {
+                        $image_stmt->bind_param("is", $project_id, $image_path);
+                        if (!$image_stmt->execute()) {
+                            throw new Exception("Failed to save additional image");
+                        }
+                    }
+                    $image_stmt->close();
                 }
 
                 // Commit transaction
@@ -209,13 +300,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['success_message'] = "Project created successfully";
                 echo "<script>window.location.href = 'dashboard.php';</script>";
                 exit();
-                
+
             } catch (Exception $e) {
                 // Rollback transaction on error
                 $conn->rollback();
                 throw $e;
             }
         }
+
 // Modify the verify_project action handler to ensure proper JSON response
 if ($action === 'verify_project') {
     // Ensure we're sending JSON response
@@ -503,46 +595,131 @@ ob_end_flush();
 </div>
 
 <!-- Modals -->
- <!-- Edit Project Modal -->
+<!-- Edit Project Modal with Additional Fields -->
 <div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editProjectModalLabel">Edit Project</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editProjectForm">
-                    <input type="hidden" id="edit_project_id" name="project_id">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="overflow:scroll;height:500px">
+            <form id="editProjectForm" method="POST" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editProjectModalLabel">Edit Project</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="project_id" id="edit_project_id">
                     <input type="hidden" name="action" value="edit_project">
-                    <div class="mb-3">
-                        <label for="edit_title" class="form-label">Project Title</label>
-                        <input type="text" class="form-control" id="edit_title" name="title" required>
+                    
+                    <!-- Basic Project Information -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="edit_title" class="form-label">Project Title</label>
+                            <input type="text" class="form-control" id="edit_title" name="title" required readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_project_category" class="form-label">Project Category</label>
+                            <select class="form-control" id="edit_project_category" name="project_category" required readonly>
+                                <option value="">Select Category</option>
+                                <option value="residential">Residential</option>
+                                <option value="commercial">Commercial</option>
+                                <option value="industrial">Industrial</option>
+                                <option value="mixed_use">Mixed Use</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="edit_description" class="form-label">Description</label>
-                        <textarea class="form-control" id="edit_description" name="description" rows="3" required></textarea>
+
+                    <!-- Location and Description -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="edit_location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="edit_location" name="location" required readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_description" class="form-label">Description</label>
+                            <textarea class="form-control" id="edit_description" name="description" rows="3" required readonly></textarea>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="edit_location" class="form-label">Location</label>
-                        <input type="text" class="form-control" id="edit_location" name="location" required>
+
+                    <!-- Financial Information -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="edit_total_project_cost" class="form-label">Total Project Cost</label>
+                            <input type="number" class="form-control" id="edit_total_project_cost" name="total_project_cost" required readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="edit_investment_goal" class="form-label">Investment Goal</label>
+                            <input type="number" class="form-control" id="edit_investment_goal" name="investment_goal" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="edit_projected_revenue" class="form-label">Projected Revenue</label>
+                            <input type="number" class="form-control" id="edit_projected_revenue" name="projected_revenue" required>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="edit_investment_goal" class="form-label">Investment Goal</label>
-                        <input type="number" class="form-control" id="edit_investment_goal" name="investment_goal" required>
+
+                    <!-- Investment Types -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Investment Types Available</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="investment_types[]" value="interest_bond" id="edit_interest_bond" readonly>
+                                <label class="form-check-label" for="edit_interest_bond">Interest Yielding Bond</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="investment_types[]" value="profit_sharing" id="edit_profit_sharing" 
+                                <label class="form-check-label" for="edit_profit_sharing">Profit Sharing</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="investment_types[]" value="equity" id="edit_equity" >
+                                <label class="form-check-label" for="edit_equity">Equity</label>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <label for="edit_projected_profit" class="form-label">Projected Profit</label>
+                            <input type="number" class="form-control" id="edit_projected_profit" name="projected_profit" required >
+                        </div>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="saveProjectChanges()">Save Changes</button>
-            </div>
+
+                    <!-- Developer Information -->
+                    <div class="mb-3">
+                        <label for="edit_developer_info" class="form-label">Developer Information</label>
+                        <textarea class="form-control" id="edit_developer_info" name="developer_info" rows="3" required readonly></textarea>
+                    </div>
+
+                    <!-- Building Materials -->
+                    <div class="mb-3">
+                        <label for="edit_building_materials" class="form-label">Building Materials Needed</label>
+                        <textarea class="form-control" id="edit_building_materials" name="building_materials" rows="3" required></textarea>
+                    </div>
+
+                    <!-- Images Upload -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="edit_featured_image" class="form-label">Featured Image</label>
+                            <input type="file" class="form-control" id="edit_featured_image" name="featured_image" accept="image/*" >
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_additional_images" class="form-label">Additional Images</label>
+                            <input type="file" class="form-control" id="edit_additional_images" name="additional_images[]" accept="image/*" multiple >
+                        </div>
+                    </div>
+
+                    <!-- Land Title Document -->
+                    <div class="mb-3">
+                        <label for="edit_land_title" class="form-label">Land Title Document (Required)</label>
+                        <input type="file" class="form-control" id="edit_land_title" name="land_title" disabled>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="saveProjectChanges()">Save Changes</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
-<div class="modal fade" id="newProjectModal" tabindex="-1" aria-labelledby="newProjectModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
+
+<!-- New Project Modal with Additional Fields -->
+<div class="modal fade" id="newProjectModal" tabindex="-1" aria-labelledby="newProjectModalLabel" aria-hidden="true" >
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="overflow:scroll;height:500px">
             <form action="dashboard.php" method="POST" enctype="multipart/form-data">
                 <div class="modal-header">
                     <h5 class="modal-title" id="newProjectModalLabel">Create New Project</h5>
@@ -550,25 +727,104 @@ ob_end_flush();
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="action" value="create_project">
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Project Title</label>
-                        <input type="text" class="form-control" id="title" name="title" required>
+                    
+                    <!-- Basic Project Information -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="title" class="form-label">Project Title</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="project_category" class="form-label">Project Category</label>
+                            <select class="form-control" id="project_category" name="project_category" required>
+                                <option value="">Select Category</option>
+                                <option value="residential">Residential</option>
+                                <option value="commercial">Commercial</option>
+                                <option value="industrial">Industrial</option>
+                                <option value="mixed_use">Mixed Use</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+
+                    <!-- Location and Description -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="location" name="location" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="location" class="form-label">Location</label>
-                        <input type="text" class="form-control" id="location" name="location" required>
+
+                    <!-- Financial Information -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="total_project_cost" class="form-label">Total Project Cost</label>
+                            <input type="number" class="form-control" id="total_project_cost" name="total_project_cost" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="investment_goal" class="form-label">Investment Goal</label>
+                            <input type="number" class="form-control" id="investment_goal" name="investment_goal" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="projected_revenue" class="form-label">Projected Revenue</label>
+                            <input type="number" class="form-control" id="projected_revenue" name="projected_revenue" required>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="investment_goal" class="form-label">Investment Goal</label>
-                        <input type="number" class="form-control" id="investment_goal" name="investment_goal" required>
+
+                    <!-- Investment Types -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Investment Types Available</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="investment_types[]" value="interest_bond" id="interest_bond">
+                                <label class="form-check-label" for="interest_bond">Interest Yielding Bond</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="investment_types[]" value="profit_sharing" id="profit_sharing">
+                                <label class="form-check-label" for="profit_sharing">Profit Sharing</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="investment_types[]" value="equity" id="equity">
+                                <label class="form-check-label" for="equity">Equity</label>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <label for="projected_profit" class="form-label">Projected Profit</label>
+                            <input type="number" class="form-control" id="projected_profit" name="projected_profit" required>
+                        </div>
                     </div>
+
+                    <!-- Developer Information -->
+                    <div class="mb-3">
+                        <label for="developer_info" class="form-label">Developer Information</label>
+                        <textarea class="form-control" id="developer_info" name="developer_info" rows="3" required></textarea>
+                    </div>
+
+                    <!-- Building Materials -->
+                    <div class="mb-3">
+                        <label for="building_materials" class="form-label">Building Materials Needed</label>
+                        <textarea class="form-control" id="building_materials" name="building_materials" rows="3" required></textarea>
+                    </div>
+
+                    <!-- Images Upload -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="featured_image" class="form-label">Featured Image</label>
+                            <input type="file" class="form-control" id="featured_image" name="featured_image" accept="image/*" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="additional_images" class="form-label">Additional Images</label>
+                            <input type="file" class="form-control" id="additional_images" name="additional_images[]" accept="image/*" multiple>
+                        </div>
+                    </div>
+
+                    <!-- Land Title Document -->
                     <div class="mb-3">
                         <label for="land_title" class="form-label">Land Title Document (Required)</label>
-                        <input type="file" class="form-control" id="land_title" name="land_title">
+                        <input type="file" class="form-control" id="land_title" name="land_title" required>
                     </div>
                 </div>
                 <div class="modal-footer">

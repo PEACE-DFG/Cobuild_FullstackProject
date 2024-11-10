@@ -13,15 +13,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description = $_POST['description'];
     $location = $_POST['location'];
     $investment_goal = $_POST['investment_goal'];
+    $project_category = $_POST['project_category'];
+    $total_project_cost = $_POST['total_project_cost'];
+    $projected_revenue = $_POST['projected_revenue'];
+    $projected_profit = $_POST['projected_profit'];
+    $developer_info = $_POST['developer_info'];
+    $building_materials = $_POST['building_materials'];
     $user_id = $_SESSION['user_id'];
+    
+    // Convert investment types to a JSON format if stored as JSON
+    $investment_types = isset($_POST['investment_types']) ? json_encode($_POST['investment_types']) : json_encode([]);
 
     $stmt = $conn->prepare("
         UPDATE projects 
-        SET title = ?, description = ?, location = ?, investment_goal = ? 
+        SET title = ?, description = ?, location = ?, investment_goal = ?, project_category = ?, 
+            total_project_cost = ?, projected_revenue = ?, projected_profit = ?, developer_info = ?, 
+            building_materials = ?, investment_types = ? 
         WHERE id = ? AND builder_id = ?
     ");
     
-    $stmt->bind_param("sssiii", $title, $description, $location, $investment_goal, $project_id, $user_id);
+    $stmt->bind_param(
+        "sssisssssssii", 
+        $title, 
+        $description, 
+        $location, 
+        $investment_goal, 
+        $project_category, 
+        $total_project_cost, 
+        $projected_revenue, 
+        $projected_profit, 
+        $developer_info, 
+        $building_materials, 
+        $investment_types,
+        $project_id, 
+        $user_id
+    );
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true]);

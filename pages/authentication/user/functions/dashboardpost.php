@@ -75,80 +75,200 @@ function verifyPaystackPayment($reference) {
   return json_decode($response, true);
 }
 
+
+// Function to handle multiple file uploads
+function handleMultipleFileUploads($files, $upload_dir) {
+    $uploaded_paths = [];
+    
+    foreach ($files['name'] as $key => $name) {
+        if ($files['error'][$key] === 0) {
+            $file_extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+            $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+            
+            if (!in_array($file_extension, $allowed_extensions)) {
+                throw new Exception("Invalid file type for image: $name");
+            }
+
+            $new_filename = uniqid() . '_' . basename($name);
+            $target_path = $upload_dir . $new_filename;
+
+            if (!move_uploaded_file($files['tmp_name'][$key], $target_path)) {
+                throw new Exception("Failed to upload image: $name");
+            }
+
+            $uploaded_paths[] = $target_path;
+        }
+    }
+    
+    return $uploaded_paths;
+}
+
+// Function to handle single file upload
+function handleSingleFileUpload($file, $upload_dir, $allowed_extensions) {
+    if (!isset($file) || $file['error'] !== 0) {
+        throw new Exception("File upload is required");
+    }
+
+    if (!is_dir($upload_dir)) {
+        mkdir($upload_dir, 0777, true);
+    }
+
+    $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    
+    if (!in_array($file_extension, $allowed_extensions)) {
+        throw new Exception("Invalid file type");
+    }
+
+    $new_filename = uniqid() . '_' . basename($file['name']);
+    $target_path = $upload_dir . $new_filename;
+
+    if (!move_uploaded_file($file['tmp_name'], $target_path)) {
+        throw new Exception("Failed to upload file");
+    }
+
+    return $target_path;
+}
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  
-  try {
-      $action = getPostValue('action');
-      
-      if ($action === 'create_project') {
-          // Begin transaction
-          $conn->begin_transaction();
+    try {
+        $action = getPostValue('action');
+        
+        if ($action === 'create_project') {
+            // Begin transaction
+            $conn->begin_transaction();
 
-          try {
-              // Prepare project data
-              $title = getPostValue('title');
-              $description = getPostValue('description');
-              $location = getPostValue('location');
-              $investment_goal = getPostValue('investment_goal');  // Make sure investment goal is captured
+            try {
+                // Basic project information
+                $title = getPostValue('title');
+                $project_category = getPostValue('project_category');
+                $description = getPostValue('description');
+                $location = getPostValue('location');
+                $investment_goal = getPostValue('investment_goal');
+                $total_project_cost = getPostValue('total_project_cost');
+                $projected_revenue = getPostValue('projected_revenue');
+                $projected_profit = getPostValue('projected_profit');
+                $building_materials = getPostValue('building_materials');
+                $developer_info = getPostValue('developer_info');
+                
+                // Handle investment types
+                $investment_types = isset($_POST['investment_types']) ? $_POST['investment_types'] : [];
+                $investment_types_json = json_encode($investment_types);
 
-              
-              // Validate required fields
-              if (empty($title) || empty($description) || empty($location)|| empty($investment_goal)) {
-                  throw new Exception("All fields are required, including investment goal");
-              }
+                // Validate required fields
+                if (empty($title) || empty($description) || empty($location) || 
+                    empty($investment_goal) || empty($total_project_cost) || 
+                    empty($projected_revenue) || empty($projected_profit)) {
+                    throw new Exception("All required fields must be filled");
+                }
 
-                 // Ensure land title document is provided
-      if (!isset($_FILES['land_title']) || $_FILES['land_title']['error'] !== 0) {
-          throw new Exception("Land title document is required");
-      }
-              // Handle land title document upload
-              $land_title_document = isset($_FILES['land_title']) ? handleFileUpload($_FILES['land_title']) : '';
+                // Handle file uploads
+                $uploads_base = 'uploads/';
+                $land_titles_dir = $uploads_base . 'land_titles/';
+                $project_images_dir = $uploads_base . 'project_images/';
+                $featured_images_dir = $uploads_base . 'featured_images/';
 
-              $stmt = $conn->prepare("
-              INSERT INTO projects (
-                  builder_id, 
-                  title, 
-                  description, 
-                  location,
-                  investment_goal,
-                  status,
-                  land_title_document,
-                  verification_status,
-                  verification_fee_paid,
-                  current_stage
-              ) VALUES (?, ?, ?, ?, ?, 'pending', ?, 'unverified', FALSE, 'planning')
-          ");
-              if (!$stmt) {
-                  throw new Exception("Failed to prepare statement: " . $conn->error);
-              }
+                // Handle land title document
+                $land_title_document = handleSingleFileUpload(
+                    $_FILES['land_title'],
+                    $land_titles_dir,
+                    ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png']
+                );
 
-              $stmt->bind_param(
-                  "isssss",
-                  $user_id,
-                  $title,
-                  $description,
-                  $location,
-                  $investment_goal,
-                  $land_title_document
-              );
+                // Handle featured image
+                $featured_image = handleSingleFileUpload(
+                    $_FILES['featured_image'],
+                    $featured_images_dir,
+                    ['jpg', 'jpeg', 'png', 'gif']
+                );
 
-              if (!$stmt->execute()) {
-                  throw new Exception("Failed to create project: " . $stmt->error);
-              }
+                // Insert project data
+                $stmt = $conn->prepare("
+                    INSERT INTO projects (
+                        builder_id,
+                        title,
+                        project_category,
+                        description,
+                        location,
+                        investment_goal,
+                        total_project_cost,
+                        projected_revenue,
+                        projected_profit,
+                        building_materials,
+                        developer_info,
+                        investment_types,
+                        status,
+                        land_title_document,
+                        featured_image,
+                        verification_status,
+                        verification_fee_paid,
+                        current_stage
+                    ) VALUES (
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+                        'pending', ?, ?, 'unverified', FALSE, 'planning'
+                    )
+                ");
 
-              // Commit transaction
-              $conn->commit();
-              $_SESSION['success_message'] = "Project created successfully";
-              echo "<script>window.location.href = 'dashboard.php';</script>";
-              exit();
-              
-          } catch (Exception $e) {
-              // Rollback transaction on error
-              $conn->rollback();
-              throw $e;
-          }
-      }
+                if (!$stmt) {
+                    throw new Exception("Failed to prepare statement: " . $conn->error);
+                }
+
+                $stmt->bind_param(
+                    "issssddddsssss",
+                    $user_id,
+                    $title,
+                    $project_category,
+                    $description,
+                    $location,
+                    $investment_goal,
+                    $total_project_cost,
+                    $projected_revenue,
+                    $projected_profit,
+                    $building_materials,
+                    $developer_info,
+                    $investment_types_json,
+                    $land_title_document,
+                    $featured_image
+                );
+
+                if (!$stmt->execute()) {
+                    throw new Exception("Failed to create project: " . $stmt->error);
+                }
+
+                $project_id = $conn->insert_id;
+
+                // Handle additional images
+                if (isset($_FILES['additional_images']) && !empty($_FILES['additional_images']['name'][0])) {
+                    $additional_images = handleMultipleFileUploads($_FILES['additional_images'], $project_images_dir);
+                    
+                    // Insert additional images
+                    $image_stmt = $conn->prepare("
+                        INSERT INTO project_images (project_id, image_path, is_featured)
+                        VALUES (?, ?, FALSE)
+                    ");
+
+                    foreach ($additional_images as $image_path) {
+                        $image_stmt->bind_param("is", $project_id, $image_path);
+                        if (!$image_stmt->execute()) {
+                            throw new Exception("Failed to save additional image");
+                        }
+                    }
+                    $image_stmt->close();
+                }
+
+                // Commit transaction
+                $conn->commit();
+                $_SESSION['success_message'] = "Project created successfully";
+                echo "<script>window.location.href = 'dashboard.php';</script>";
+                exit();
+
+            } catch (Exception $e) {
+                // Rollback transaction on error
+                $conn->rollback();
+                throw $e;
+            }
+        }
+
 // Modify the verify_project action handler to ensure proper JSON response
       if ($action === 'verify_project') {
         // Ensure we're sending JSON response

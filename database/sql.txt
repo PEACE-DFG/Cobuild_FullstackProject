@@ -119,3 +119,142 @@ CREATE TABLE project_milestones (
 
 ALTER TABLE projects
 ADD COLUMN payment_reference VARCHAR(255);
+
+-- Alter existing projects table to add new fields
+ALTER TABLE projects
+ADD COLUMN project_category VARCHAR(50) AFTER title,
+ADD COLUMN total_project_cost DECIMAL(15,2) AFTER investment_goal,
+ADD COLUMN featured_image VARCHAR(255) AFTER land_title_document,
+ADD COLUMN projected_revenue DECIMAL(15,2),
+ADD COLUMN projected_profit DECIMAL(15,2),
+ADD COLUMN building_materials TEXT,
+ADD COLUMN developer_info TEXT,
+ADD COLUMN investment_types JSON,
+ADD COLUMN current_investment_amount DECIMAL(15,2) DEFAULT 0.00;
+
+-- Create new table for project images
+CREATE TABLE project_images (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    project_id INT NOT NULL,
+    image_path VARCHAR(255) NOT NULL,
+    is_featured BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+
+-- Add indexes for better performance
+CREATE INDEX idx_project_category ON projects(project_category);
+CREATE INDEX idx_investment_goal ON projects(investment_goal);
+CREATE INDEX idx_project_images ON project_images(project_id);
+
+-- Drop existing tables that will be restructured
+DROP TABLE IF EXISTS labor_tracking;
+DROP TABLE IF EXISTS investments;
+DROP TABLE IF EXISTS user_preferences;
+
+-- Create new investors table with more detailed structure
+CREATE TABLE IF NOT EXISTS investors (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone VARCHAR(50),
+    investment_preferences TEXT,
+    registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('active', 'inactive', 'suspended') DEFAULT 'active',
+    FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create investor_skills table (new)
+CREATE TABLE IF NOT EXISTS investor_skills (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    investor_id INT NOT NULL,
+    skill_type VARCHAR(100) NOT NULL,
+    available_hours INT,
+    hourly_rate DECIMAL(10,2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (investor_id) REFERENCES investors(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create new investments table with enhanced structure
+CREATE TABLE IF NOT EXISTS investments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    investor_id INT NOT NULL,
+    project_id INT NOT NULL,
+    investment_type ENUM('cash', 'labor', 'materials') NOT NULL,
+    investment_value DECIMAL(15,2) NOT NULL,
+    status ENUM('pending', 'active', 'completed', 'cancelled') DEFAULT 'pending',
+    certificate_url VARCHAR(255),
+    investment_description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (investor_id) REFERENCES investors(id),
+    FOREIGN KEY (project_id) REFERENCES projects(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create new labor_tracking table with enhanced structure
+CREATE TABLE IF NOT EXISTS labor_tracking (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    investment_id INT NOT NULL,
+    hours_worked DECIMAL(10,2) NOT NULL,
+    work_date DATE NOT NULL,
+    evidence_url VARCHAR(255),
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (investment_id) REFERENCES investments(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create investment_intentions table (new)
+CREATE TABLE IF NOT EXISTS investment_intentions (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    investor_id INT NOT NULL,
+    project_id INT NOT NULL,
+    investment_type ENUM('labor', 'materials') NOT NULL,
+    quantity DECIMAL(10,2) NOT NULL,
+    unit VARCHAR(50) NOT NULL,
+    status ENUM('pending', 'accepted', 'rejected', 'completed') DEFAULT 'pending',
+    certificate_url VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (investor_id) REFERENCES investors(id),
+    FOREIGN KEY (project_id) REFERENCES projects(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create new investor_preferences table with enhanced structure
+CREATE TABLE IF NOT EXISTS investor_preferences (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    investor_id INT NOT NULL,
+    project_type VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (investor_id) REFERENCES investors(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create developer_meetings table (new)
+CREATE TABLE IF NOT EXISTS developer_meetings (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    investor_id INT NOT NULL,
+    project_id INT NOT NULL,
+    meeting_date DATETIME,
+    status ENUM('scheduled', 'completed', 'cancelled') DEFAULT 'scheduled',
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (investor_id) REFERENCES investors(id),
+    FOREIGN KEY (project_id) REFERENCES projects(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create notification_preferences table (new)
+CREATE TABLE IF NOT EXISTS notification_preferences (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    investor_id INT NOT NULL,
+    notification_type VARCHAR(100) NOT NULL,
+    email_enabled BOOLEAN DEFAULT TRUE,
+    sms_enabled BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (investor_id) REFERENCES investors(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Data migration queries (to be run after creating new tables)
+INSERT INTO investors (user_id, name, email, phone, registration_date)
+SELECT id, name, email, phone_number, registration_date
+FROM users
+WHERE user_type = 'investor';

@@ -132,6 +132,20 @@ function editProject(projectId) {
             document.getElementById('edit_description').value = project.description;
             document.getElementById('edit_location').value = project.location;
             document.getElementById('edit_investment_goal').value = project.investment_goal;
+            document.getElementById('edit_project_category').value = project.project_category;
+            document.getElementById('edit_total_project_cost').value = project.total_project_cost;
+            document.getElementById('edit_projected_revenue').value = project.projected_revenue;
+            document.getElementById('edit_projected_profit').value = project.projected_profit;
+            document.getElementById('edit_developer_info').value = project.developer_info;
+            document.getElementById('edit_building_materials').value = project.building_materials;
+
+            // Set checkboxes for investment types
+            document.getElementById('edit_interest_bond').checked = project.investment_types.includes('interest_bond');
+            document.getElementById('edit_profit_sharing').checked = project.investment_types.includes('profit_sharing');
+            document.getElementById('edit_equity').checked = project.investment_types.includes('equity');
+
+// Update file inputs for images and land title document (these should only be handled if necessary, as they cannot be programmatically assigned for security reasons)
+
             
             new bootstrap.Modal(document.getElementById('editProjectModal')).show();
         })

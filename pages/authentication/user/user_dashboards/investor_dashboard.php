@@ -65,15 +65,92 @@ $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $monthly_trends = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Fetch projects added by all developers
+// Modify your existing projects query to include a JOIN with project_images
 $stmt = $conn->prepare("SELECT 
-    *
-    FROM projects 
-    ORDER BY created_at DESC");
+    p.*,
+    GROUP_CONCAT(pi.image_path) as additional_images
+    FROM projects p
+    LEFT JOIN project_images pi ON p.id = pi.project_id
+    GROUP BY p.id
+    ORDER BY p.created_at DESC");
 $stmt->execute();
 $projects = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
 ?>
 
+<style>
+.project-additional-image {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    margin: 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.project-additional-image:hover {
+    transform: scale(1.05);
+}
+
+#modal_additional_images_container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: start;
+    margin-top: 10px;
+}
+#modal_featured_image {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: start;
+    margin-top: 10px;
+}
+#modal_land_document {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: start;
+    margin-top: 10px;
+}
+.zoomable-img {
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        .zoomable-img:hover {
+            opacity: 0.8;
+        }
+        .image-zoom-modal {
+            z-index: 1060;
+        }
+        .image-zoom-modal .modal-dialog {
+            max-width: 90vw;
+            margin: 1.75rem auto;
+        }
+        .image-zoom-modal .modal-content {
+            background-color: transparent;
+            border: none;
+        }
+        .image-zoom-modal img {
+            max-width: 100%;
+            max-height: 90vh;
+            margin: auto;
+            display: block;
+        }
+        .zoom-close-btn {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            background: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 1070;
+        }
+</style>
 <h2 class="mb-4">Investor Dashboard</h2>
 
 <!-- Widgets Section -->
@@ -142,33 +219,93 @@ $projects = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             <table class="table table-hover">
                 <thead>
                     <tr>
-                    <th>Deveoper Id</th>
+                    <th>Developer Id</th>
                     <th>Title</th>
                     <th>Description</th>
                         <th>Date Added</th>
                         <th>Verification Status</th>
-                        <th>Current Stage</th>
+                        <th>Current Investment Amount</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($projects as $project): ?>
-                    <tr>
-                    <td><?php echo htmlspecialchars($project['builder_id']); ?></td>
-                    <td><?php echo htmlspecialchars($project['title']); ?></td>
-                    <td><?php echo htmlspecialchars($project['description']); ?></td>
-                        <td><?php echo date('M d, Y', strtotime($project['created_at'])); ?></td>
-                        <td><?php echo ucfirst(htmlspecialchars($project['verification_status'])); ?></td>
-                        <td><?php echo htmlspecialchars($project['current_stage']); ?></td>
-                        <td><button class="btn btn-success">Invest</button></td>
+    <?php foreach ($projects as $project): ?>
+    <tr onclick="showProjectDetails(<?php echo htmlspecialchars(json_encode($project)); ?>)" style="cursor:pointer">
+        <td><?php echo htmlspecialchars($project['builder_id']); ?></td>
+        <td><?php echo htmlspecialchars($project['title']); ?></td>
+        <td><?php echo htmlspecialchars($project['description']); ?></td>
+        <td><?php echo date('M d, Y', strtotime($project['created_at'])); ?></td>
+        <td><?php echo ucfirst(htmlspecialchars($project['verification_status'])); ?></td>
+        <td><?php echo htmlspecialchars($project['current_investment_amount']); ?></td>
+        <td><button class="btn btn-success">Invest</button></td>
+    </tr>
+    <?php endforeach; ?>
+</tbody>
 
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
             </table>
         </div>
     </div>
 </div>
+<!-- Project Details Modal -->
+<div class="modal fade" id="projectDetailsModal" tabindex="-1" aria-labelledby="projectDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="overflow:auto;height:500px">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="projectDetailsModalLabel">Project Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Project Details -->
+                    <p><strong>Project Title:</strong> <span id="modal_project_title"></span></p>
+                    <p><strong>Category:</strong> <span id="modal_project_category"></span></p>
+                    <p><strong>Location:</strong> <span id="modal_location"></span></p>
+                    <p><strong>Description:</strong> <span id="modal_description"></span></p>
+                    <p><strong>Total Project Cost:</strong> <span id="modal_total_project_cost"></span></p>
+                    <p><strong>Investment Goal:</strong> <span id="modal_investment_goal"></span></p>
+                    <p><strong>Projected Revenue:</strong> <span id="modal_projected_revenue"></span></p>
+                    <p><strong>Projected Profit:</strong> <span id="modal_projected_profit"></span></p>
+                    <p><strong>Developer Info:</strong> <span id="modal_developer_info"></span></p>
+                    <p><strong>Building Materials:</strong> <span id="modal_building_materials"></span></p>
+                    <p><strong>Investment Types Available:</strong> <span id="modal_investment_types"></span></p>
+                    <p><strong>Verification Status:</strong> <span id="modal_verification_status"></span></p>
+
+                    <!-- Image Section -->
+                    <div class="mt-4">
+                        <h6>Images</h6>
+                        <p><strong>Featured Image:</strong></p>
+    <img id="modal_featured_image" src="" alt="Featured Image" class="img-fluid mb-3 zoomable-img" style="max-height: 200px; max-width: 100%;" onclick="openZoomModal(this.src)">
+    
+    <p><strong>Additional Images:</strong></p>
+    <div id="modal_additional_images_container" class="d-flex flex-wrap gap-2">
+        <!-- Images will be dynamically inserted here -->
+    </div>
+    
+    <p><strong>Land Title Document:</strong></p>
+    <img id="modal_land_document" src="" alt="Land Document" class="img-fluid zoomable-img" style="max-height: 200px; max-width: 100%;" onclick="openZoomModal(this.src)">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="verifyProject()">Verify Project</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Zoom Modal -->
+    <div class="modal fade image-zoom-modal" id="imageZoomModal" tabindex="-1" aria-hidden="true">
+        <button type="button" class="zoom-close-btn" onclick="closeZoomModal()">×</button>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body p-0">
+                    <img id="zoomedImage" src="" alt="Zoomed Image" class="img-fluid">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
 <!-- Recent Investments Table -->
 <div class="card mt-4">
     <div class="card-body">
@@ -277,4 +414,90 @@ new Chart(trendsCtx, {
         }
     }
 });
+
+
+function showProjectDetails(project) {
+    // Set text details
+    const setText = (id, value) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.innerText = value || "N/A";
+        }
+    };
+
+    setText('modal_project_title', project.title);
+    setText('modal_project_category', project.project_category);
+    setText('modal_location', project.location);
+    setText('modal_description', project.description);
+    setText('modal_total_project_cost', project.total_project_cost);
+    setText('modal_investment_goal', project.investment_goal);
+    setText('modal_projected_revenue', project.projected_revenue);
+    setText('modal_projected_profit', project.projected_profit);
+    setText('modal_developer_info', project.developer_info);
+    setText('modal_building_materials', project.building_materials);
+    setText('modal_verification_status', project.verification_status || "Unverified");
+
+    // Investment types (array or string)
+    const investmentTypes = project.investment_types;
+    setText('modal_investment_types', Array.isArray(investmentTypes) ? investmentTypes.join(', ') : investmentTypes);
+
+    // Set image sources with default fallback
+    const setImage = (id, src) => {
+        const img = document.getElementById(id);
+        if (img) {
+            img.src = src || 'https://www.creativefabrica.com/wp-content/uploads/2020/07/03/Nothing-to-See-Here-Illustration-Graphics-4531211-1.png'; // Path to your placeholder image
+        }
+    };
+
+
+    // Handle multiple project images
+    const additionalImagesContainer = document.getElementById('modal_additional_images_container');
+    additionalImagesContainer.innerHTML = ''; // Clear existing images
+    
+    if (project.additional_images) {
+        const imageUrls = project.additional_images.split(',');
+        imageUrls.forEach(imageUrl => {
+            const imgWrapper = document.createElement('div');
+            imgWrapper.className = 'position-relative';
+            
+            const img = document.createElement('img');
+            img.src = imageUrl || 'https://www.creativefabrica.com/wp-content/uploads/2020/07/03/Nothing-to-See-Here-Illustration-Graphics-4531211-1.png';
+            img.alt = 'Project Image';
+            img.className = 'project-additional-image zoomable-img';
+            img.onclick = () => openZoomModal(img.src);
+            
+            imgWrapper.appendChild(img);
+            additionalImagesContainer.appendChild(imgWrapper);
+        });
+    }
+
+    // Set featured image - assuming it's stored in project.featured_image
+    setImage('modal_featured_image', project.featured_image);
+    setImage('modal_additional_image', project.project_images);
+    setImage('modal_land_document', project.land_title_document);
+    // console.log(project_images)
+    
+
+    // Show the modal
+    const projectDetailsModal = new bootstrap.Modal(document.getElementById('projectDetailsModal'));
+    projectDetailsModal.show();
+}
+
+
+function openZoomModal(imageSrc) {
+            const zoomModal = new bootstrap.Modal(document.getElementById('imageZoomModal'));
+            document.getElementById('zoomedImage').src = imageSrc;
+            zoomModal.show();
+        }
+
+        function closeZoomModal() {
+            const zoomModal = bootstrap.Modal.getInstance(document.getElementById('imageZoomModal'));
+            zoomModal.hide();
+        }
+
+function verifyProject() {
+    // Implement verification functionality here
+    alert("Project verification in progress...");
+}
+
 </script>

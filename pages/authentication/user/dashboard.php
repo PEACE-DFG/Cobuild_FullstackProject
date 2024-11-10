@@ -124,19 +124,19 @@ ob_end_flush();
                 <form id="profile-form" method="POST" enctype="multipart/form-data"  onsubmit="submitProfileForm(event)">
                 <div class="mb-3">
     <label for="profile-name" class="form-label">Name</label>
-    <input type="text" class="form-control" id="profile-name" name="profile-name" value="<?php echo htmlspecialchars($user['name']); ?>">
+    <input type="text" class="form-control" id="profile-name" name="profile-name" value="<?php echo htmlspecialchars($user['name']); ?>" readonly>
 </div>
 <div class="mb-3">
     <label for="profile-email" class="form-label">Email</label>
-    <input type="email" class="form-control" id="profile-email" name="profile-email" value="<?php echo htmlspecialchars($user['email']); ?>">
+    <input type="email" class="form-control" id="profile-email" name="profile-email" value="<?php echo htmlspecialchars($user['email']); ?>" readonly>
 </div>
 <div class="mb-3">
     <label for="profile-password" class="form-label">New Password</label>
-    <input type="password" class="form-control" id="profile-password" name="profile-password">
+    <input type="password" class="form-control" id="profile-password" name="profile-password" readonly>
 </div>
 <div class="mb-3">
     <label for="profile-image" class="form-label">Profile Image</label>
-    <input type="file" class="form-control" id="profile-image" name="profile-image">
+    <input type="file" class="form-control" id="profile-image" name="profile-image" readonly>
 </div>
                     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
