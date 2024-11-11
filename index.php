@@ -258,8 +258,25 @@ if (isset($_SESSION['user_id'])) {
                         <!-- User is not logged in, show Sign In and Sign Up buttons -->
                         <li class="btn-cta" id="signInButton"><a href="#"><span>Sign In</span></a></li>
                         <li class="btn-cta" id="signUpButton"><a href="#"><span>Sign Up</span></a></li>
-                        <li class="btn-cta"><a href="#" data-nav-section="user"><span>Invest</span></a></li>
-                        <li class="btn-cta"><a href="#" data-nav-section="user"><span>Raise Funds</span></a></li>
+                        <li class="btn-cta"><a href="#" data-nav-section="user1"><span>Invest</span></a></li>
+                        <li class="btn-cta"><a href="#" data-nav-section="user2"><span>Raise Funds</span></a></li>
+												<script>
+
+													const investButton = document.querySelector('[data-nav-section="user1"] span:first-child');
+													const raiseButton = document.querySelector('[data-nav-section="user2"] span:last-child');
+
+													investButton.addEventListener('click', showRegisterOrSignUpAlert);
+													raiseButton.addEventListener('click', showRegisterOrSignUpAlert);
+
+													function showRegisterOrSignUpAlert() {
+														Swal.fire({
+															title: 'Please Register or Sign Up',
+															text: 'You must register or sign up before performing this action.',
+															icon: 'warning',
+															confirmButtonText: 'OK'
+														});
+													}
+												</script>
                     <?php else: ?>
                         <!-- User is logged in, show user email with dropdown and logout option -->
                         <li class="dropdown">
