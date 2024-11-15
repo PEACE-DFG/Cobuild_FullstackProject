@@ -64,7 +64,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $delete_user->bind_param("s", $email);
                         $delete_user->execute();
 
-                        $message = "Registration failed because the email could not be sent. Please try again.";
+                        $message = "Registration failed because the email could not be sent Due to Network Issue. Please try again.";
                         $message_type = 'error';
                     }
                 } else {

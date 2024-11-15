@@ -1,0 +1,163 @@
+<?php
+require_once '../../../database/db.php';
+require '../../../vendor/autoload.php';
+require_once '../../../config/mail_config.php'; // New config file for email settings
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+/**
+ * Notifies investors of a new project in their subscribed category
+ * 
+ * @param int $project_id The ID of the new project
+ * @param int $project_category_id The category ID of the project
+ * @return array Returns array with 'success' boolean and 'message' string
+ */
+function notifyInvestorsOfNewProject($project_id, $project_category_id) {
+    global $conn;
+    
+    try {
+        // Validate inputs
+        if (!is_numeric($project_id) || !is_numeric($project_category_id)) {
+            throw new Exception("Invalid project or category ID");
+        }
+
+        // Get all investors subscribed to this category
+        $stmt = $conn->prepare("
+            SELECT * FROM investor_notification_preferences 
+            WHERE category_id = ? AND is_active = 1
+        ");
+        $stmt->bind_param("i", $project_category_id);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Database query failed: " . $stmt->error);
+        }
+        
+        $result = $stmt->get_result();
+        $subscribers = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+
+        if (empty($subscribers)) {
+            return ['success' => true, 'message' => 'No active subscribers found for this category'];
+        }
+
+        // Get project details
+        $stmt = $conn->prepare("
+            SELECT p.title, p.description, pc.category_name, p.investment_goal, 
+                   p.verification_status, p.total_project_cost
+            FROM projects p
+            JOIN project_categories pc ON p.project_category = pc.id
+            WHERE p.id = ?
+        ");
+        $stmt->bind_param("i", $project_id);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Failed to fetch project details: " . $stmt->error);
+        }
+        
+        $project = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$project) {
+            throw new Exception("Project not found");
+        }
+
+        // Initialize PHPMailer with config
+        $mail = new PHPMailer(true);
+        $mail->isSMTP();
+        $mail->Host = SMTP_HOST;
+        $mail->SMTPAuth = true;
+        $mail->Username = SMTP_USERNAME;
+        $mail->Password = SMTP_PASSWORD;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = SMTP_PORT;
+        $mail->setFrom(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
+
+        // Track email sending results
+        $successCount = 0;
+        $failureCount = 0;
+        $failedEmails = [];
+
+        foreach ($subscribers as $subscriber) {
+            try {
+                if (empty($subscriber['email'])) {
+                    continue;
+                }
+
+                $mail->clearAddresses();
+                $mail->addAddress($subscriber['email']);
+                $mail->isHTML(true);
+                $mail->Subject = "New {$project['category_name']} Investment Opportunity";
+
+                // Enhanced email template
+                $body = "
+                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                        <h2>Hello {$subscriber['name']},</h2>
+                        <p>A new investment opportunity matching your interests is now available!</p>
+                        
+                        <div style='background-color: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 5px;'>
+                            <h3 style='color: #2c3e50;'>{$project['title']}</h3>
+                            <p>{$project['description']}</p>
+                            
+                            <ul style='list-style: none; padding: 0;'>
+                                <li><strong>Category:</strong> {$project['category_name']}</li>
+                                <li><strong>Investment Goal:</strong> $" . number_format($project['investment_goal'], 2) . "</li>
+                                <li><strong>Verification_Status:</strong> $" . number_format($project['verification_status'], 2) . "</li>
+                                <li><strong>Total Project cost:</strong> {$project['total_project_cost']}%</li>
+                            </ul>
+                        </div>
+
+                        <p><a href='" . SITE_URL . "/investor/project-details.php?id={$project_id}' 
+                              style='background-color: #3498db; color: white; padding: 10px 20px; 
+                                     text-decoration: none; border-radius: 5px; display: inline-block;'>
+                            View Project Details
+                        </a></p>
+                        
+                        <p style='color: #7f8c8d; font-size: 0.9em;'>
+                            To update your notification preferences, visit your 
+                            <a href='" . SITE_URL . "/investor/notification-settings.php'>account settings</a>.
+                        </p>
+                    </div>
+                ";
+
+                $mail->Body = $body;
+                $mail->AltBody = strip_tags($body);
+
+                if ($mail->send()) {
+                    $successCount++;
+                } else {
+                    $failureCount++;
+                    $failedEmails[] = $subscriber['email'];
+                }
+            } catch (Exception $e) {
+                $failureCount++;
+                $failedEmails[] = $subscriber['email'];
+                error_log("Failed to send email to {$subscriber['email']}: " . $e->getMessage());
+            }
+        }
+
+        // Generate result message
+        $message = "Successfully sent {$successCount} notifications";
+        if ($failureCount > 0) {
+            $message .= ". Failed to send {$failureCount} notifications.";
+            error_log("Failed emails: " . implode(", ", $failedEmails));
+        }
+
+        return [
+            'success' => ($successCount > 0),
+            'message' => $message,
+            'details' => [
+                'success_count' => $successCount,
+                'failure_count' => $failureCount,
+                'failed_emails' => $failedEmails
+            ]
+        ];
+
+    } catch (Exception $e) {
+        error_log("Notification system error: " . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => "Failed to process notifications: " . $e->getMessage()
+        ];
+    }
+}

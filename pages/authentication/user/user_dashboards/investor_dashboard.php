@@ -152,6 +152,9 @@ $projects = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         }
 </style>
 <h2 class="mb-4">Investor Dashboard</h2>
+<button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#notificationPreferencesModal">
+    <i class="bi bi-bell"></i> Manage Notification Preferences
+</button>
 
 <!-- Widgets Section -->
 <div class="row mt-4">
@@ -237,7 +240,7 @@ $projects = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         <td><?php echo date('M d, Y', strtotime($project['created_at'])); ?></td>
         <td><?php echo ucfirst(htmlspecialchars($project['verification_status'])); ?></td>
         <td><?php echo htmlspecialchars($project['current_investment_amount']); ?></td>
-        <td><button class="btn btn-success">Invest</button></td>
+        <td><button class="btn btn-success">Details</button></td>
     </tr>
     <?php endforeach; ?>
 </tbody>
@@ -286,7 +289,7 @@ $projects = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="verifyProject()">Verify Project</button>
+                    <button type="button" class="btn btn-info" onclick="verifyProject()">Invest</button>
                 </div>
             </div>
         </div>
@@ -306,7 +309,103 @@ $projects = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 
 
-<!-- Recent Investments Table -->
+<!-- Add this modal definition after your existing modals but before the closing body tag -->
+<div class="modal fade" id="notificationPreferencesModal" tabindex="-1" aria-labelledby="notificationPreferencesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notificationPreferencesModalLabel">Project Notification Preferences</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="notificationPreferencesForm">
+                    <div class="mb-3">
+                        <h6>Select Project Types for Notifications:</h6>
+                        <?php
+                        // Fetch current preferences
+                        $stmt = $conn->prepare("
+                            SELECT pc.id, pc.category_name, 
+                                   CASE WHEN inp.id IS NOT NULL AND inp.is_active = 1 
+                                        THEN 1 ELSE 0 END as is_subscribed
+                            FROM project_categories pc
+                            LEFT JOIN investor_notification_preferences inp 
+                                ON pc.id = inp.category_id 
+                                AND inp.investor_id = ?
+                        ");
+                        $stmt->bind_param("i", $user_id);
+                        $stmt->execute();
+                        $preferences = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+                        foreach ($preferences as $pref):
+                        ?>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" 
+                                   name="project_categories[]" 
+                                   value="<?php echo $pref['id']; ?>"
+                                   id="pref_<?php echo $pref['id']; ?>"
+                                   <?php echo $pref['is_subscribed'] ? 'checked' : ''; ?>>
+                            <label class="form-check-label" for="pref_<?php echo $pref['id']; ?>">
+                                <?php echo ucfirst($pref['category_name']); ?> Projects
+                            </label>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="savePreferences()">Save Preferences</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showNotification(message, isSuccess = true, callback = null) {
+    const toast = document.getElementById('notificationToast');
+    toast.textContent = message;
+    toast.style.backgroundColor = isSuccess ? '#4CAF50' : '#f44336'; // Green for success, red for error
+    toast.classList.add('show');
+    toast.style.display = 'block';
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            toast.style.display = 'none';
+            if (callback) callback(); // Call the callback after hiding the notification
+        }, 200);
+    }, 3000); // Show for 3 seconds
+}
+
+function savePreferences() {
+    const form = document.getElementById('notificationPreferencesForm');
+    const formData = new FormData(form);
+
+    fetch('save_preferences.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("Preferences saved successfully:", data);
+        showNotification("Preferences saved successfully!", true, () => {
+            location.reload(); // Reload the page after showing the notification
+        });
+    })
+    .catch(error => {
+        console.error("Fetch error:", error);
+        showNotification("An error occurred while saving preferences. Please try again.", false);
+    });
+}
+</script>
+
+    <!-- Recent Investments Table -->
+
 <div class="card mt-4">
     <div class="card-body">
         <h5 class="card-title">Recent Investments</h5>

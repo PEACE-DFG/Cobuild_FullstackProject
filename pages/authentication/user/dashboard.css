@@ -121,3 +121,11 @@ footer {
   padding: 15px;
   margin-top: 20px;
 }
+.toast {
+  transition: opacity 0.5s ease-in-out;
+  opacity: 0;
+}
+
+.toast.show {
+  opacity: 1;
+}

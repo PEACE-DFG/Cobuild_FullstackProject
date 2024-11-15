@@ -258,3 +258,37 @@ INSERT INTO investors (user_id, name, email, phone, registration_date)
 SELECT id, name, email, phone_number, registration_date
 FROM users
 WHERE user_type = 'investor';
+
+
+-- Modify the existing investor_preferences table
+ALTER TABLE investor_preferences 
+DROP COLUMN project_type;
+
+-- Create a new normalized structure
+CREATE TABLE project_categories (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    category_name VARCHAR(50) NOT NULL,
+    category_description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE investor_notification_preferences (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    investor_id INT NOT NULL,
+    category_id INT NOT NULL,
+    email_frequency ENUM('immediately', 'daily', 'weekly') DEFAULT 'immediately',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (investor_id) REFERENCES users(id),
+    FOREIGN KEY (category_id) REFERENCES project_categories(id)
+);
+
+-- Insert default project categories
+INSERT INTO project_categories (category_name) VALUES 
+('residential'),
+('commercial'),
+('industrial'),
+('renovation'),
+('sustainable'),
+('infrastructure');

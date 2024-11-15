@@ -99,7 +99,7 @@ ob_end_flush();
                         </button>
                         <img src="<?php echo isset($user['profile_image']) ? htmlspecialchars($user['profile_image']) : 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png'; ?>" alt="User" class="rounded-circle" width="40">
                         <span class="me-3"><?php echo htmlspecialchars($user['name'] ?? 'Guest'); ?></span>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#profileModal">Edit Profile</button>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#profileModal"><small>Edit Profile</small></button>
                     </div>
                 </div>
             </div>
@@ -176,5 +176,8 @@ if (!empty($errors)) {
     </script>";
 }
 ?>
+
+<div id="notificationToast" class="toast" style="display:none; position: fixed; bottom: 20px; right: 20px; padding: 10px; background-color: #333; color: #fff; border-radius: 5px; z-index: 1000;"></div>
+
 </body>
 </html>
