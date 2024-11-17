@@ -129,3 +129,24 @@ footer {
 .toast.show {
   opacity: 1;
 }
+.pdf-container {
+  width: 100%;
+  height: 200px;
+  border: 1px solid #ddd;
+  margin-bottom: 10px;
+}
+
+.document-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.zoomable-img {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.zoomable-img:hover {
+  transform: scale(1.05);
+}

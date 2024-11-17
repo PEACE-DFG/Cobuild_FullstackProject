@@ -68,8 +68,10 @@ $monthly_trends = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 // Modify your existing projects query to include a JOIN with project_images
 $stmt = $conn->prepare("SELECT 
     p.*,
+    pc.category_name,
     GROUP_CONCAT(pi.image_path) as additional_images
     FROM projects p
+    LEFT JOIN project_categories pc ON p.project_category = pc.id
     LEFT JOIN project_images pi ON p.id = pi.project_id
     GROUP BY p.id
     ORDER BY p.created_at DESC");
@@ -284,7 +286,9 @@ $projects = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     </div>
     
     <p><strong>Land Title Document:</strong></p>
-    <img id="modal_land_document" src="" alt="Land Document" class="img-fluid zoomable-img" style="max-height: 200px; max-width: 100%;" onclick="openZoomModal(this.src)">
+    <div id="modal_land_document" class="land-document-container">
+    <!-- Content will be dynamically inserted here by JavaScript -->
+</div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -516,7 +520,6 @@ new Chart(trendsCtx, {
 
 
 function showProjectDetails(project) {
-    // Set text details
     const setText = (id, value) => {
         const element = document.getElementById(id);
         if (element) {
@@ -525,7 +528,7 @@ function showProjectDetails(project) {
     };
 
     setText('modal_project_title', project.title);
-    setText('modal_project_category', project.project_category);
+    setText('modal_project_category', project.category_name); // Now using category_name instead of project_category
     setText('modal_location', project.location);
     setText('modal_description', project.description);
     setText('modal_total_project_cost', project.total_project_cost);
@@ -536,22 +539,75 @@ function showProjectDetails(project) {
     setText('modal_building_materials', project.building_materials);
     setText('modal_verification_status', project.verification_status || "Unverified");
 
-    // Investment types (array or string)
+    // Investment types handling
     const investmentTypes = project.investment_types;
     setText('modal_investment_types', Array.isArray(investmentTypes) ? investmentTypes.join(', ') : investmentTypes);
 
-    // Set image sources with default fallback
-    const setImage = (id, src) => {
-        const img = document.getElementById(id);
-        if (img) {
-            img.src = src || 'https://www.creativefabrica.com/wp-content/uploads/2020/07/03/Nothing-to-See-Here-Illustration-Graphics-4531211-1.png'; // Path to your placeholder image
+    // Handle land title document based on file type
+    const landDocContainer = document.getElementById('modal_land_document');
+    landDocContainer.innerHTML = ''; // Clear existing content
+
+    if (project.land_title_document) {
+        const fileExtension = project.land_title_document.split('.').pop().toLowerCase();
+        
+        if (fileExtension === 'pdf') {
+            // Create container for PDF and download button
+            const docWrapper = document.createElement('div');
+            docWrapper.className = 'd-flex flex-column align-items-start gap-2';
+            
+            // Add PDF preview iframe
+            const iframe = document.createElement('iframe');
+            iframe.src = project.land_title_document;
+            iframe.className = 'w-100';
+            iframe.style.height = '200px';
+            iframe.title = 'Land Title Document';
+            
+            // Add download button
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'btn btn-primary';
+            downloadBtn.innerHTML = '<i class="bi bi-download"></i> View Document';
+            downloadBtn.onclick = () => {
+                window.open(project.land_title_document, '_blank');
+            };
+            
+            docWrapper.appendChild(iframe);
+            docWrapper.appendChild(downloadBtn);
+            landDocContainer.appendChild(docWrapper);
+        } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
+            // Create container for image and download button
+            const docWrapper = document.createElement('div');
+            docWrapper.className = 'd-flex flex-column align-items-start gap-2';
+            
+            // Add image with zoom functionality
+            const img = document.createElement('img');
+            img.src = project.land_title_document;
+            img.alt = 'Land Title Document';
+            img.className = 'img-fluid zoomable-img';
+            img.style.maxHeight = '200px';
+            img.style.maxWidth = '100%';
+            img.onclick = () => openZoomModal(project.land_title_document);
+            
+            // Add download button
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'btn btn-primary';
+            downloadBtn.innerHTML = '<i class="bi bi-download"></i> Download Document';
+            downloadBtn.onclick = () => {
+                window.open(project.land_title_document, '_blank');
+            };
+            
+            docWrapper.appendChild(img);
+            docWrapper.appendChild(downloadBtn);
+            landDocContainer.appendChild(docWrapper);
+        } else {
+            landDocContainer.textContent = 'Unsupported file format';
         }
-    };
+    } else {
+        landDocContainer.textContent = 'No document available';
+    }
 
-
-    // Handle multiple project images
+    // Handle additional images (existing code)
     const additionalImagesContainer = document.getElementById('modal_additional_images_container');
-    additionalImagesContainer.innerHTML = ''; // Clear existing images
+    additionalImagesContainer.innerHTML = '';
     
     if (project.additional_images) {
         const imageUrls = project.additional_images.split(',');
@@ -560,7 +616,7 @@ function showProjectDetails(project) {
             imgWrapper.className = 'position-relative';
             
             const img = document.createElement('img');
-            img.src = imageUrl || 'https://www.creativefabrica.com/wp-content/uploads/2020/07/03/Nothing-to-See-Here-Illustration-Graphics-4531211-1.png';
+            img.src = imageUrl || 'path/to/placeholder-image.jpg';
             img.alt = 'Project Image';
             img.className = 'project-additional-image zoomable-img';
             img.onclick = () => openZoomModal(img.src);
@@ -570,12 +626,16 @@ function showProjectDetails(project) {
         });
     }
 
-    // Set featured image - assuming it's stored in project.featured_image
-    setImage('modal_featured_image', project.featured_image);
-    setImage('modal_additional_image', project.project_images);
-    setImage('modal_land_document', project.land_title_document);
-    // console.log(project_images)
-    
+    // Set featured image
+    const featuredImage = document.getElementById('modal_featured_image');
+    if (featuredImage) {
+        if (project.featured_image) {
+            featuredImage.src = project.featured_image;
+            featuredImage.style.display = 'block';
+        } else {
+            featuredImage.src = 'path/to/placeholder-image.jpg';
+        }
+    }
 
     // Show the modal
     const projectDetailsModal = new bootstrap.Modal(document.getElementById('projectDetailsModal'));
