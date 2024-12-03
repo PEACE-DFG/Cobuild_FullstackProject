@@ -168,156 +168,222 @@ function handleSingleFileUpload($file, $upload_dir, $allowed_extensions) {
 
     return $target_path;
 }
+// Populate building_materials_master table
+function populateBuildingMaterialsMaster($conn) {
+    $materials = [
+        // Construction Materials
+        ['Cement', 'Construction', 'bags'],
+        ['Sand', 'Construction', 'cubic meters'],
+        ['Gravel', 'Construction', 'cubic meters'],
+        ['Building Blocks', 'Construction', 'pieces'],
+        ['Reinforcement Bars', 'Construction', 'kg'],
+        
+        // Tools
+        ['Wheelbarrow', 'Tools', 'pieces'],
+        ['Shovel', 'Tools', 'pieces'],
+        ['Headpan', 'Tools', 'pieces'],
+        ['Trowel', 'Tools', 'pieces'],
+        ['Measuring Tape', 'Tools', 'pieces'],
+        
+        // Electrical Materials
+        ['Electrical Wire', 'Electrical', 'meters'],
+        ['PVC Conduit Pipes', 'Electrical', 'meters'],
+        ['Electrical Cable', 'Electrical', 'meters'],
+        ['Electrical Sockets', 'Electrical', 'pieces'],
+        ['Electrical Switches', 'Electrical', 'pieces'],
+        
+        // Plumbing Materials
+        ['PVC Pipes', 'Plumbing', 'meters'],
+        ['Pipe Fittings', 'Plumbing', 'pieces'],
+        ['Water Valves', 'Plumbing', 'pieces'],
+        ['Drainage Pipes', 'Plumbing', 'meters'],
+        
+        // Finishing Materials
+        ['Tiles', 'Finishing', 'square meters'],
+        ['Paint', 'Finishing', 'liters'],
+        ['Primer', 'Finishing', 'liters'],
+        ['Ceiling Boards', 'Finishing', 'pieces'],
+        ['Flooring Materials', 'Finishing', 'square meters']
+    ];
+
+    $stmt = $conn->prepare("INSERT INTO building_materials_master (material_name, category, default_unit) VALUES (?, ?, ?)");
+    
+    foreach ($materials as $material) {
+        $stmt->bind_param("sss", $material[0], $material[1], $material[2]);
+        $stmt->execute();
+    }
+    $stmt->close();
+}
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-     
-// Main script to create project and notify investors
-$action = getPostValue('action');
+        // Main script to create project and notify investors
+        $action = getPostValue('action');
 
-if ($action === 'create_project') {
+        if ($action === 'create_project') {
+            // Begin transaction
+            $conn->begin_transaction();
+
+            try {
+                // Basic project information
+                $title = getPostValue('title');
+                $project_category = getPostValue('project_category');
+                $description = getPostValue('description');
+                $location = getPostValue('location');
+                $investment_goal = getPostValue('investment_goal');
+                $total_project_cost = getPostValue('total_project_cost');
+                $projected_revenue = getPostValue('projected_revenue');
+                $projected_profit = getPostValue('projected_profit');
+                $developer_info = getPostValue('developer_info');
+
+                // Handle investment types
+                $investment_types = isset($_POST['investment_types']) ? $_POST['investment_types'] : [];
+                $investment_types_json = json_encode($investment_types);
+
+                // Validate required fields
+                $validationErrors = [];
+                if (empty($title)) $validationErrors[] = "Project Title is required";
+                if (empty($description)) $validationErrors[] = "Description is required";
+                if (empty($location)) $validationErrors[] = "Location is required";
+                if (empty($investment_goal)) $validationErrors[] = "Investment Goal is required";
+                if (empty($total_project_cost)) $validationErrors[] = "Total Project Cost is required";
+                if (empty($projected_revenue)) $validationErrors[] = "Projected Revenue is required";
+                if (empty($projected_profit)) $validationErrors[] = "Projected Profit is required";
+
+                if (!empty($validationErrors)) {
+                    throw new Exception(implode(", ", $validationErrors));
+                }
+
+                // Handle file uploads
+                $uploads_base = 'uploads/';
+                $land_titles_dir = $uploads_base . 'land_titles/';
+                $project_images_dir = $uploads_base . 'project_images/';
+                $featured_images_dir = $uploads_base . 'featured_images/';
+
+                // Handle land title document
+                $land_title_document = handleSingleFileUpload(
+                    $_FILES['land_title'],
+                    $land_titles_dir,
+                    ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png']
+                );
+
+                // Handle featured image
+                $featured_image = handleSingleFileUpload(
+                    $_FILES['featured_image'],
+                    $featured_images_dir,
+                    ['jpg', 'jpeg', 'png', 'gif']
+                );
+
+                                    // Insert project data
+                $stmt = $conn->prepare("
+                INSERT INTO projects (
+                    builder_id,
+                    title,
+                    project_category,
+                    description,
+                    location,
+                    investment_goal,
+                    total_project_cost,
+                    projected_revenue,
+                    projected_profit,
+                    developer_info,
+                    investment_types,
+                    status,
+                    land_title_document,
+                    featured_image,
+                    verification_status,
+                    verification_fee_paid,
+                    current_stage
+                ) VALUES (
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                )
+                ");
+
+                if (!$stmt) {
+                throw new Exception("Failed to prepare statement: " . $conn->error);
+                }
+
+                // Prepare all values
+                $status = 'pending';
+                $verification_status = 'unverified';
+                $verification_fee_paid = false;
+                $current_stage = 'planning';
+
+                // Bind parameters with all 17 values
+                $stmt->bind_param(
+                "issssddddsssssssi",  // Updated type string to match 17 parameters
+                $user_id,
+                $title,
+                $project_category,
+                $description,
+                $location,
+                $investment_goal,
+                $total_project_cost,
+                $projected_revenue,
+                $projected_profit,
+                $developer_info,
+                $investment_types_json,
+                $status,
+                $land_title_document,
+                $featured_image,
+                $verification_status,
+                $verification_fee_paid,
+                $current_stage
+                );
+
+                // Execute the statement
+                if (!$stmt->execute()) {
+                throw new Exception("Failed to create project: " . $stmt->error);
+                }
+
     
-    // Begin transaction
-    $conn->begin_transaction();
 
-    try {
-        // Basic project information
-        $title = getPostValue('title');
-        $project_category = getPostValue('project_category');
-        $description = getPostValue('description');
-        $location = getPostValue('location');
-        $investment_goal = getPostValue('investment_goal');
-        $total_project_cost = getPostValue('total_project_cost');
-        $projected_revenue = getPostValue('projected_revenue');
-        $projected_profit = getPostValue('projected_profit');
-        $building_materials = getPostValue('building_materials');
-        $developer_info = getPostValue('developer_info');
+                // After inserting the project and getting the project_id
+$project_id = $conn->insert_id;
 
-        // Handle investment types
-        $investment_types = isset($_POST['investment_types']) ? $_POST['investment_types'] : [];
-        $investment_types_json = json_encode($investment_types);
+// Check if materials were submitted
+if (isset($_POST['materials']) && is_array($_POST['materials'])) {
+    $material_stmt = $conn->prepare("
+        INSERT INTO project_materials (project_id, material_name, material_category, quantity, unit) 
+        VALUES (?, ?, ?, ?, ?)
+    ");
 
-        // Validate required fields
-        if (empty($title) || empty($description) || empty($location) || 
-            empty($investment_goal) || empty($total_project_cost) || 
-            empty($projected_revenue) || empty($projected_profit)) {
-            throw new Exception("All required fields must be filled");
+    foreach ($_POST['materials'] as $material) {
+        // Check if the material is a string
+        if (is_string($material)) {
+            // Decode the JSON string back to an associative array
+            $materialData = json_decode($material, true);
+
+            // Ensure the material array has the correct structure
+            if (isset($materialData['category'], $materialData['name'], $materialData['quantity'], $materialData['unit'])) {
+                $category = $materialData['category'];
+                $name = $materialData['name'];
+                $quantity = (int)$materialData['quantity']; // Ensure quantity is an integer
+                $unit = $materialData['unit']; // Get the unit from the material data
+
+                // Bind parameters
+                $material_stmt->bind_param("issis", $project_id, $name, $category, $quantity, $unit);
+                if (!$material_stmt->execute()) {
+                    error_log("Failed to insert material: " . $material_stmt->error);
+                    throw new Exception("Failed to insert material: " . $material_stmt->error);
+                }
+            } else {
+                error_log("Material data is missing required fields.");
+            }
+        } else {
+            error_log("Expected a string but received: " . print_r($material, true));
         }
-
-        // Handle file uploads
-        $uploads_base = 'uploads/';
-        $land_titles_dir = $uploads_base . 'land_titles/';
-        $project_images_dir = $uploads_base . 'project_images/';
-        $featured_images_dir = $uploads_base . 'featured_images/';
-
-        // Handle land title document
-        $land_title_document = handleSingleFileUpload(
-            $_FILES['land_title'],
-            $land_titles_dir,
-            ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png']
-        );
-
-        // Handle featured image
-        $featured_image = handleSingleFileUpload(
-            $_FILES['featured_image'],
-            $featured_images_dir,
-            ['jpg', 'jpeg', 'png', 'gif']
-        );
-
-        // Insert project data
-        $stmt = $conn->prepare("
-            INSERT INTO projects (
-                builder_id,
-                title,
-                project_category,
-                description,
-                location,
-                investment_goal,
-                total_project_cost,
-                projected_revenue,
-                projected_profit,
-                building_materials,
-                developer_info,
-                investment_types,
-                status,
-                land_title_document,
-                featured_image,
-                verification_status,
-                verification_fee_paid,
-                current_stage
-            ) VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
-                'pending', ?, ?, 'unverified', FALSE, 'planning'
-            )
-        ");
-
-        if (!$stmt) {
-            throw new Exception("Failed to prepare statement: " . $conn->error);
-        }
-
-        $stmt->bind_param(
-            "issssddddsssss",
-            $user_id,
-            $title,
-            $project_category,
-            $description,
-            $location,
-            $investment_goal,
-            $total_project_cost,
-            $projected_revenue,
-            $projected_profit,
-            $building_materials,
-            $developer_info,
-            $investment_types_json,
-            $land_title_document,
-            $featured_image
-        );
-
-        if (!$stmt->execute()) {
-            throw new Exception("Failed to create project: " . $stmt->error);
-        }
-
-        $project_id = $conn->insert_id;
-// Notify investors of the new project
-$project_category_id = $project_category; // Assuming $project_category is the ID of the project category
-if (isset($project_id) && isset($project_category_id)) {
-    $notifyResult = notifyInvestorsOfNewProject($project_id, $project_category_id);
-    if ($notifyResult) {
-        echo "<script>
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: 'Investors have been notified about the new project.',
-                showConfirmButton: false,
-                timer: 1500
-            });
-        </script>";
-    } else {
-        echo "<script>
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: 'Failed to notify investors about the new project.',
-                confirmButtonColor: '#3085d6'
-            });
-        </script>";
     }
+    $material_stmt->close();
 } else {
-    echo "<script>
-        Swal.fire({
-            icon: 'warning',
-            title: 'Warning',
-            text: 'Project ID or Category ID is not defined.',
-            confirmButtonColor: '#3085d6'
-        });
-    </script>";
-}                             
+    error_log("No materials submitted.");
+}
+
                 // Handle additional images
                 if (isset($_FILES['additional_images']) && !empty($_FILES['additional_images']['name'][0])) {
                     $additional_images = handleMultipleFileUploads($_FILES['additional_images'], $project_images_dir);
                     
-                    // Insert additional images
                     $image_stmt = $conn->prepare("
                         INSERT INTO project_images (project_id, image_path, is_featured)
                         VALUES (?, ?, FALSE)
@@ -326,97 +392,98 @@ if (isset($project_id) && isset($project_category_id)) {
                     foreach ($additional_images as $image_path) {
                         $image_stmt->bind_param("is", $project_id, $image_path);
                         if (!$image_stmt->execute()) {
-                            throw new Exception("Failed to save additional image");
+                            error_log("Failed to save additional image: " . $image_stmt->error);
                         }
                     }
                     $image_stmt->close();
                 }
 
+                // Notify investors of the new project
+                if (isset($project_id) && isset($project_category)) {
+                    $notifyResult = notifyInvestorsOfNewProject($project_id, $project_category);
+                    if ($notifyResult) {
+                        // Success notification can be added here
+                        error_log("Investors notified successfully");
+                    } else {
+                 error_log("Failed to notify investors about the new project");
+                    }
+                } else {
+                    error_log("Project ID or Category ID is not defined.");
+                }
+
                 // Commit transaction
                 $conn->commit();
-                $_SESSION['success_message'] = "Project created successfully";
+                $_SESSION['success_message'] = "Project created successfully Investors with Project Prefernce Would be Notified!";
                 echo "<script>window.location.href = 'dashboard.php';</script>";
                 exit();
-
-                if ($project_created_successfully) {
-                    // Refresh projects table or do any other necessary actions
-                }
 
             } catch (Exception $e) {
                 // Rollback transaction on error
                 $conn->rollback();
-                throw $e;
-            }
-        }
-
-            // Modify the verify_project action handler to ensure proper JSON response
-
-            if ($action === 'verify_project') {
-                // Ensure we're sending JSON response
-                header('Content-Type: application/json');
-                
-                // Clear any existing output
-                ob_clean();
-                
-                $project_id = getPostValue('project_id');
-                
-                if (!$project_id) {
-                    throw new Exception('Project ID is required');
-                }
-                // Verify project ownership
-                $stmt = $conn->prepare("SELECT * FROM projects WHERE id = ? AND builder_id = ?");
-                $stmt->bind_param("ii", $project_id, $user_id);
-                $stmt->execute();
-                $project = $stmt->get_result()->fetch_assoc();
-                
-                if (!$project) {
-                    throw new Exception('Project not found or unauthorized');
-                }
-
-                // Get user email for payment
-                $stmt = $conn->prepare("SELECT email FROM users WHERE id = ?");
-                $stmt->bind_param("i", $user_id);
-                $stmt->execute();
-                $user = $stmt->get_result()->fetch_assoc();
-
-                // Initialize Paystack payment
-                $payment = initializePaystackPayment($user['email'], $project_id);
-                
-                if (!$payment['status']) {
-                    throw new Exception('Failed to initialize payment: ' . ($payment['message'] ?? 'Unknown error'));
-                }
-
-                echo json_encode([
-                    'status' => true,
-                    'message' => 'Payment initialized successfully',
-                    'authorization_url' => $payment['data']['authorization_url']
-                ]);
-                exit;
-            }
-
-            // ... rest of your existing action handlers ...
-
-                } catch (Exception $e) {
-                if ($action === 'verify_project') {
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'status' => false,
-                    'message' => $e->getMessage()
-                ]);
-                exit;
-            } else {
+                error_log("Error in project creation: " . $e->getMessage());
                 $_SESSION['error_message'] = "Error: " . $e->getMessage();
                 echo "<script>window.location.href = 'dashboard.php';</script>";
                 exit();
             }
-                } catch (Exception $e) {
-                    error_log("Error in builder dashboard: " . $e->getMessage());
-                    $_SESSION['error_message'] = "Error: " . $e->getMessage();
-                    echo "<script>window.location.href = 'dashboard.php';</script>";
-                    exit();
-                }
-                
+        }
+
+        // Modify the verify_project action handler to ensure proper JSON response
+        if ($action === 'verify_project') {
+            header('Content-Type: application/json');
+            ob_clean();
+
+            $project_id = getPostValue('project_id');
+
+            if (!$project_id) {
+                throw new Exception('Project ID is required');
             }
+
+            // Verify project ownership
+            $stmt = $conn->prepare("SELECT * FROM projects WHERE id = ? AND builder_id = ?");
+            $stmt->bind_param("ii", $project_id, $user_id);
+            $stmt->execute();
+            $project = $stmt->get_result()->fetch_assoc();
+
+            if (!$project) {
+                throw new Exception('Project not found or unauthorized');
+            }
+
+            // Get user email for payment
+            $stmt = $conn->prepare("SELECT email FROM users WHERE id = ?");
+            $stmt->bind_param("i", $user_id);
+            $stmt->execute();
+            $user = $stmt->get_result()->fetch_assoc();
+
+            // Initialize Paystack payment
+            $payment = initializePaystackPayment($user['email'], $project_id);
+
+            if (!$payment['status']) {
+                throw new Exception('Failed to initialize payment: ' . ($payment['message'] ?? 'Unknown error'));
+            }
+
+            echo json_encode([
+                'status' => true,
+                'message' => 'Payment initialized successfully',
+                'authorization_url' => $payment['data']['authorization_url']
+            ]);
+            exit;
+        }
+
+    } catch (Exception $e) {
+        if ($action === 'verify_project') {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => false,
+                'message' => $e->getMessage()
+            ]);
+            exit;
+        } else {
+            $_SESSION['error_message'] = "Error: " . $e->getMessage();
+            echo "<script>window.location.href = 'dashboard.php';</script>";
+            exit();
+        }
+    }
+}
 
 // Fetch dashboard statistics with proper error handling
 try {
@@ -658,7 +725,7 @@ ob_end_flush();
                         </div>
                         <div class="col-md-6">
                             <label for="edit_project_category" class="form-label">Project Category</label>
-                            <select class="form-control" id="edit_project_category" name="project_category" required>
+                            <select class="form-control" id="edit_project_category" name="project_category" required disabled>
                                 <option value="">Select Category</option>
                                 <option value="1">Residential</option>
                                 <option value="2">Commercial</option>
@@ -728,11 +795,39 @@ ob_end_flush();
                         <textarea class="form-control" id="edit_developer_info" name="developer_info" rows="3" required readonly></textarea>
                     </div>
 
-                    <!-- Building Materials -->
-                    <div class="mb-3">
-                        <label for="edit_building_materials" class="form-label">Building Materials Needed</label>
-                        <textarea class="form-control" id="edit_building_materials" name="building_materials" rows="3" required></textarea>
-                    </div>
+                  <!-- Building Materials Section -->
+<div class="form-group">
+    <label for="edit_building_materials" class="font-weight-bold text-primary">Building Materials</label>
+    <div id="edit_building_materials" class="mb-4">
+        <!-- Card for Building Materials -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Materials List</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                <table id="materials_table">
+    <thead>
+        <tr>
+            <th>Material Name</th>
+            <th>Category</th>
+            <th>Quantity</th>
+            <th>Unit</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="materials_table_body">
+      
+        <!-- More rows... -->
+    </tbody>
+</table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 
                     <!-- Images Upload -->
                     <div class="row mb-3">
@@ -850,11 +945,32 @@ ob_end_flush();
                         <textarea class="form-control" id="developer_info" name="developer_info" rows="3" required></textarea>
                     </div>
 
-                    <!-- Building Materials -->
-                    <div class="mb-3">
-                        <label for="building_materials" class="form-label">Building Materials Needed</label>
-                        <textarea class="form-control" id="building_materials" name="building_materials" rows="3" required></textarea>
-                    </div>
+          
+
+<div class="mb-3">
+    <label class="form-label">Project Materials</label>
+    <div class="row mb-2" id="materials-container">
+        <div class="col-md-4 my-3">
+            <select name="materials[0][category]" class="form-control" id="material_category" >
+                <option value="">Select Category</option>
+                <!-- Populate categories -->
+            </select>
+        </div>
+        <div class="col-md-4 my-3">
+            <select name="materials[0][name]" class="form-control"  id="material_name">
+                <option value="">Select Material</option>
+                <!-- Populate materials -->
+            </select>
+        </div>
+        <div class="col-md-2 my-3">
+            <input type="number"   id="material_quantity"name="materials[0][quantity]" class="form-control" placeholder="Quantity" min="1">
+        </div>
+        <div class="col-md-2 my-3">
+            <button type="button" id="add_material_btn" class="btn btn-primary"><small>Add Material</small></button>
+        </div>
+    </div>
+    <ul id="selected_materials_list" class="list-group mt-2"></ul>
+</div>
 
                     <!-- Images Upload -->
                     <div class="row mb-3">
