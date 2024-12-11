@@ -359,14 +359,14 @@ function saveProjectChanges() {
     // Predefined material data
     const materialData = {
         categories: {
-            'Construction': ['Cement', 'Sand', 'Gravel', 'Building Blocks', 'Reinforcement Bars'],
+            'Construction': ['Cement', 'Sand', 'Gravel', 'Building Blocks', 'Reinforcement Bars','Granite','Bricks','Planks','Nails','Window Frames','Doors','iton','Roofing Sheet','Kitchen Cabinet','Wardrobes'],
             'Tools': ['Wheelbarrow', 'Shovel', 'Headpan', 'Trowel', 'Measuring Tape'],
-            'Electrical': ['Electrical Wire', 'PVC Conduit Pipes', 'Electrical Cable', 'Electrical Sockets', 'Electrical Switches'],
+            'Electrical': ['Electrical Wire', 'PVC Conduit Pipes', 'Electrical Cable', 'Electrical Sockets', 'Electrical Switches','Bulbs'],
             'Plumbing': ['PVC Pipes', 'Pipe Fittings', 'Water Valves', 'Drainage Pipes'],
-            'Finishing': ['Tiles', 'Paint', 'Primer', 'Ceiling Boards', 'Flooring Materials']
+            'Finishing': ['Tiles', 'Paint', 'Primer', 'Ceiling Boards', 'Flooring Materials','Pop Cement']
         },
         units: {
-            'Cement': 'bags', 'Sand': 'cubic meters', 'Gravel': 'cubic meters',
+            'Cement': 'bags', 'Sand': 'tons', 'Gravel': 'tons',
             'Building Blocks': 'pieces', 'Reinforcement Bars': 'kg',
             'Wheelbarrow': 'pieces', 'Shovel': 'pieces', 'Headpan': 'pieces',
             'Trowel': 'pieces', 'Measuring Tape': 'pieces',
@@ -376,7 +376,11 @@ function saveProjectChanges() {
             'Pipe Fittings': 'pieces', 'Water Valves': 'pieces',
             'Drainage Pipes': 'meters', 'Tiles': 'square meters',
             'Paint': 'liters', 'Primer': 'liters',
-            'Ceiling Boards': 'pieces', 'Flooring Materials': 'square meters'
+            'Ceiling Boards': 'pieces', 'Flooring Materials': 'square meters',
+            'Bulbs': 'pieces','Nails': 'pieces','Planks': 'pieces','Bricks': 'pieces',
+            'Window Frames': 'pieces','Doors': 'pieces','Roofing Sheets': 'pieces',
+            'Granite': 'tons','Kitchen Cabinet': 'pieces', 'Wardrobes': 'pieces',
+            'Pop Cement': 'bags',
         }
     };
 

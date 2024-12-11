@@ -78,6 +78,24 @@ $stmt = $conn->prepare("SELECT
 $stmt->execute();
 $projects = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
+// Fetch project materials
+$stmt = $conn->prepare("SELECT 
+    id,
+    project_id,
+    material_name,
+    material_category,
+    quantity,
+    unit
+    FROM project_materials
+    WHERE project_id = ?");
+$stmt->bind_param("i", $project_id);  // Assuming $project_id is defined earlier
+$stmt->execute();
+$project_materials = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+echo "<script>
+    var globalProjectMaterials = " . json_encode($projects) . ";
+</script>";
+
 ?>
 
 <style>
@@ -152,7 +170,149 @@ $projects = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             z-index: 1070;
         }
+        
+        .modal-body {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .detail-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .detail-card strong {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 16px;
+            display: block;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+
+        .detail-card span {
+            color: #34495e;
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .images-section {
+            margin-top: 20px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+
+        #modal_featured_image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        #modal_additional_images_container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        #modal_additional_images_container img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        #modal_additional_images_container img:hover {
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .verification-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .status-verified {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .material-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    margin: 8px 0;
+    background: #fff;
+}
+
+.material-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.material-header h3 {
+    font-size: 1.2rem;
+    margin: 0;
+    color: #333;
+}
+
+.material-category {
+    font-size: 0.9rem;
+    color: #555;
+    background: #f4f4f4;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.material-details p {
+    margin: 0;
+    font-size: 1rem;
+    color: #666;
+}
+
+.material-card:nth-child(even) {
+    background: #f9f9f9; /* Alternating background for cards */
+}
+
+
 </style>
+
 <h2 class="mb-4">Investor Dashboard</h2>
 <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#notificationPreferencesModal">
     <i class="bi bi-bell"></i> Manage Notification Preferences
@@ -260,37 +420,90 @@ $projects = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Project Details -->
-                    <p><strong>Project Title:</strong> <span id="modal_project_title"></span></p>
-                    <p><strong>Category:</strong> <span id="modal_project_category"></span></p>
-                    <p><strong>Location:</strong> <span id="modal_location"></span></p>
-                    <p><strong>Description:</strong> <span id="modal_description"></span></p>
-                    <p><strong>Total Project Cost:</strong> <span id="modal_total_project_cost"></span></p>
-                    <p><strong>Investment Goal:</strong> <span id="modal_investment_goal"></span></p>
-                    <p><strong>Projected Revenue:</strong> <span id="modal_projected_revenue"></span></p>
-                    <p><strong>Projected Profit:</strong> <span id="modal_projected_profit"></span></p>
-                    <p><strong>Developer Info:</strong> <span id="modal_developer_info"></span></p>
-                    <p><strong>Building Materials:</strong> <span id="modal_building_materials"></span></p>
-                    <p><strong>Investment Types Available:</strong> <span id="modal_investment_types"></span></p>
-                    <p><strong>Verification Status:</strong> <span id="modal_verification_status"></span></p>
+        <div class="details-grid">
+            <div class="detail-card">
+                <strong>Project Title</strong>
+                <span id="modal_project_title"></span>
+            </div>
+            <div class="detail-card">
+                <strong>Category</strong>
+                <span id="modal_project_category"></span>
+            </div>
+            <div class="detail-card">
+                <strong>Location</strong>
+                <span id="modal_location"></span>
+            </div>
+            <div class="detail-card">
+                <strong>Total Project Cost</strong>
+                <span id="modal_total_project_cost"></span>
+            </div>
+            <div class="detail-card">
+                <strong>Investment Goal</strong>
+                <span id="modal_investment_goal"></span>
+            </div>
+            <div class="detail-card">
+                <strong>Projected Revenue</strong>
+                <span id="modal_projected_revenue"></span>
+            </div>
+            <div class="detail-card">
+                <strong>Projected Profit</strong>
+                <span id="modal_projected_profit"></span>
+            </div>
+            <div class="detail-card">
+                <strong>Developer Info</strong>
+                <span id="modal_developer_info"></span>
+            </div>
+            <div class="detail-card">
+                <strong>Building Materials</strong>
 
-                    <!-- Image Section -->
-                    <div class="mt-4">
-                        <h6>Images</h6>
-                        <p><strong>Featured Image:</strong></p>
-    <img id="modal_featured_image" src="" alt="Featured Image" class="img-fluid mb-3 zoomable-img" style="max-height: 200px; max-width: 100%;" onclick="openZoomModal(this.src)">
-    
-    <p><strong>Additional Images:</strong></p>
-    <div id="modal_additional_images_container" class="d-flex flex-wrap gap-2">
-        <!-- Images will be dynamically inserted here -->
+                <span id="modal_building_materials"></span>
+            </div>
+            <div class="detail-card">
+                <strong>Investment Types</strong>
+                <span id="modal_investment_types"></span>
+            </div>
+            <div class="detail-card">
+                <strong>Verification Status</strong>
+                <span 
+                    id="modal_verification_status" 
+                    class="verification-status"
+                ></span>
+            </div>
+            <div class="detail-card">
+                <strong>Description</strong>
+                <span id="modal_description"></span>
+            </div>
+        </div>
+
+        <div class="images-section">
+            <h2 style="margin-bottom: 20px; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">Project Images</h2>
+            
+            <h3 style="margin-bottom: 15px; color: #34495e;">Featured Image</h3>
+            <img 
+                id="modal_featured_image" 
+                src="" 
+                alt="Featured Image" 
+                onclick="openZoomModal(this.src)"
+            >
+            
+            <h3 style="margin: 20px 0 15px; color: #34495e;">Additional Images</h3>
+            <div id="modal_additional_images_container">
+                <!-- Images will be dynamically inserted here -->
+            </div>
+            
+            <h3 style="margin: 20px 0 15px; color: #34495e;">Land Title Document</h3>
+            <div 
+                id="modal_land_document" 
+                style="
+                    background-color: #f1f3f5; 
+                    padding: 15px; 
+                    border-radius: 8px;
+                "
+            >
+                <!-- Content will be dynamically inserted here by JavaScript -->
+            </div>
+        </div>
     </div>
-    
-    <p><strong>Land Title Document:</strong></p>
-    <div id="modal_land_document" class="land-document-container">
-    <!-- Content will be dynamically inserted here by JavaScript -->
-</div>
-                    </div>
-                </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-info" onclick="verifyProject()">Invest</button>
@@ -536,7 +749,37 @@ function showProjectDetails(project) {
     setText('modal_projected_revenue', project.projected_revenue);
     setText('modal_projected_profit', project.projected_profit);
     setText('modal_developer_info', project.developer_info);
-    setText('modal_building_materials', project.building_materials);
+    //setText('modal_building_materials', project.building_materials);
+    // Assuming $project_materials is passed to the JavaScript context
+    $.ajax({
+        url: './ajax/get_project_materials.php',
+        method: 'POST',
+        data: { project_id: project.id },
+        dataType: 'json',
+        success: function(materials) {
+            let materialsHTML = '';
+            materials.forEach(material => {
+                materialsHTML += `
+                        <div class="material-card">
+            <div class="material-header">
+                <h3>${material.material_name}</h3>
+                <span class="material-category">${material.material_category}</span>
+            </div>
+            <div class="material-details">
+                <p><strong>Quantity:</strong> ${material.quantity} ${material.unit}</p>
+            </div>
+        </div>
+                `;
+            });
+            document.getElementById('modal_building_materials').innerHTML = materialsHTML;
+        },
+        error: function(xhr, status, error) {
+            console.error("Error fetching materials:", error);
+        }
+    });
+
+    // document.getElementById('modal_building_materials').innerHTML = materialsHTML;
+//     console.log('Building Materials:', project.material_name);
     setText('modal_verification_status', project.verification_status || "Unverified");
 
     // Investment types handling

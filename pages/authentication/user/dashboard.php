@@ -44,6 +44,8 @@ ob_end_flush();
     <script src="https://js.paystack.co/v1/inline.js"></script>
     <!-- css -->
      <link rel="stylesheet" href="dashboard.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 </head>
 <body>
 
