@@ -384,7 +384,7 @@ echo "<script>
             <table class="table table-hover">
                 <thead>
                     <tr>
-                    <th>Developer Id</th>
+                    <!-- <th>Developer Id</th> -->
                     <th>Title</th>
                     <th>Description</th>
                         <th>Date Added</th>
@@ -396,7 +396,7 @@ echo "<script>
                 <tbody>
     <?php foreach ($projects as $project): ?>
     <tr onclick="showProjectDetails(<?php echo htmlspecialchars(json_encode($project)); ?>)" style="cursor:pointer">
-        <td><?php echo htmlspecialchars($project['builder_id']); ?></td>
+        <!-- <td><?php echo htmlspecialchars($project['builder_id']); ?></td> -->
         <td><?php echo htmlspecialchars($project['title']); ?></td>
         <td><?php echo htmlspecialchars($project['description']); ?></td>
         <td><?php echo date('M d, Y', strtotime($project['created_at'])); ?></td>
