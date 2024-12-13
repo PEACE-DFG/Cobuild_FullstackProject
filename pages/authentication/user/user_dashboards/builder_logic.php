@@ -538,4 +538,133 @@ function saveProjectChanges() {
 
 
 
+
+document.addEventListener('DOMContentLoaded', function() {
+    let serviceCounter = 1;
+    let skillCounter = 1;
+
+    // Services Section
+    const addServiceBtn = document.getElementById('add_service_btn');
+    const servicesContainer = document.getElementById('services-container');
+    const selectedServicesList = document.getElementById('selected_services_list');
+
+    addServiceBtn.addEventListener('click', function() {
+        // Get selected service and hours
+        const serviceSelect = servicesContainer.querySelector('.service-select');
+        const serviceHoursInput = servicesContainer.querySelector('.service-hours');
+        
+        const selectedService = serviceSelect.options[serviceSelect.selectedIndex].text;
+        const selectedServiceValue = serviceSelect.value;
+        const hours = serviceHoursInput.value;
+
+        // Validate inputs
+        if (selectedServiceValue === '' || selectedServiceValue === 'none') {
+            alert('Please select a valid service');
+            return;
+        }
+
+        if (!hours || hours <= 0) {
+            alert('Please enter valid hours');
+            return;
+        }
+
+        // Create list item to show added service
+        const listItem = document.createElement('li');
+        listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+        listItem.innerHTML = `
+            ${selectedService} - ${hours} hours
+            <button type="button" class="btn btn-danger btn-sm remove-service">Remove</button>
+        `;
+
+        // Add hidden input for form submission
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = `services[${serviceCounter}][type]`;
+        hiddenInput.value = selectedServiceValue;
+        listItem.appendChild(hiddenInput);
+
+        const hiddenHoursInput = document.createElement('input');
+        hiddenHoursInput.type = 'hidden';
+        hiddenHoursInput.name = `services[${serviceCounter}][hours]`;
+        hiddenHoursInput.value = hours;
+        listItem.appendChild(hiddenHoursInput);
+
+        // Add remove functionality
+        listItem.querySelector('.remove-service').addEventListener('click', function() {
+            selectedServicesList.removeChild(listItem);
+        });
+
+        // Append to list
+        selectedServicesList.appendChild(listItem);
+
+        // Increment counter
+        serviceCounter++;
+
+        // Reset form
+        serviceSelect.selectedIndex = 0;
+        serviceHoursInput.value = '';
+    });
+
+    // Skills Section (similar to services)
+    const addSkillBtn = document.getElementById('add_skill_btn');
+    const skillsContainer = document.getElementById('skills-container');
+    const selectedSkillsList = document.getElementById('selected_skills_list');
+
+    addSkillBtn.addEventListener('click', function() {
+        // Get selected skill and hours
+        const skillSelect = skillsContainer.querySelector('.skill-select');
+        const skillHoursInput = skillsContainer.querySelector('.skill-hours');
+        
+        const selectedSkill = skillSelect.options[skillSelect.selectedIndex].text;
+        const selectedSkillValue = skillSelect.value;
+        const hours = skillHoursInput.value;
+
+        // Validate inputs
+        if (selectedSkillValue === '' || selectedSkillValue === 'none') {
+            alert('Please select a valid skill');
+            return;
+        }
+
+        if (!hours || hours <= 0) {
+            alert('Please enter valid hours');
+            return;
+        }
+
+        // Create list item to show added skill
+        const listItem = document.createElement('li');
+        listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+        listItem.innerHTML = `
+            ${selectedSkill} - ${hours} hours
+            <button type="button" class="btn btn-danger btn-sm remove-skill">Remove</button>
+        `;
+
+        // Add hidden input for form submission
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = `skills[${skillCounter}][type]`;
+        hiddenInput.value = selectedSkillValue;
+        listItem.appendChild(hiddenInput);
+
+        const hiddenHoursInput = document.createElement('input');
+        hiddenHoursInput.type = 'hidden';
+        hiddenHoursInput.name = `skills[${skillCounter}][hours]`;
+        hiddenHoursInput.value = hours;
+        listItem.appendChild(hiddenHoursInput);
+
+        // Add remove functionality
+        listItem.querySelector('.remove-skill').addEventListener('click', function() {
+            selectedSkillsList.removeChild(listItem);
+        });
+
+        // Append to list
+        selectedSkillsList.appendChild(listItem);
+
+        // Increment counter
+        skillCounter++;
+
+        // Reset form
+        skillSelect.selectedIndex = 0;
+        skillHoursInput.value = '';
+    });
+});
 </script>

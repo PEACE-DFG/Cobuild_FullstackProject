@@ -339,9 +339,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     
 
-                // After inserting the project and getting the project_id
+
+// After inserting the project and getting the project_id
 $project_id = $conn->insert_id;
 
+// Handle Services
+if (isset($_POST['services']) && is_array($_POST['services'])) {
+    $service_stmt = $conn->prepare("
+        INSERT INTO project_services (project_id, service_type, total_hours) 
+        VALUES (?, ?, ?)
+    ");
+
+    foreach ($_POST['services'] as $service) {
+        // Ensure the service is not 'none' and has a type
+        if (!empty($service['type']) && $service['type'] !== 'none') {
+            $service_type = $service['type'];
+            $total_hours = floatval($service['hours'] ?? 0);
+
+            // Bind parameters
+            $service_stmt->bind_param("iss", $project_id, $service_type, $total_hours);
+            if (!$service_stmt->execute()) {
+                error_log("Failed to insert service: " . $service_stmt->error);
+                throw new Exception("Failed to insert service: " . $service_stmt->error);
+            }
+        }
+    }
+    $service_stmt->close();
+}
+
+// Handle Skills
+if (isset($_POST['skills']) && is_array($_POST['skills'])) {
+    $skill_stmt = $conn->prepare("
+        INSERT INTO project_skills (project_id, skill_type, total_hours) 
+        VALUES (?, ?, ?)
+    ");
+
+    foreach ($_POST['skills'] as $skill) {
+        // Ensure the skill is not 'none' and has a type
+        if (!empty($skill['type']) && $skill['type'] !== 'none') {
+            $skill_type = $skill['type'];
+            $total_hours = floatval($skill['hours'] ?? 0);
+
+            // Bind parameters
+            $skill_stmt->bind_param("iss", $project_id, $skill_type, $total_hours);
+            if (!$skill_stmt->execute()) {
+                error_log("Failed to insert skill: " . $skill_stmt->error);
+                throw new Exception("Failed to insert skill: " . $skill_stmt->error);
+            }
+        }
+    }
+    $skill_stmt->close();
+}
 // Check if materials were submitted
 if (isset($_POST['materials']) && is_array($_POST['materials'])) {
     $material_stmt = $conn->prepare("
@@ -794,6 +842,7 @@ ob_end_flush();
                         <label for="edit_developer_info" class="form-label">Developer Information</label>
                         <textarea class="form-control" id="edit_developer_info" name="developer_info" rows="3" required readonly></textarea>
                     </div>
+                        
 
                   <!-- Building Materials Section -->
 <div class="form-group">
@@ -945,6 +994,67 @@ ob_end_flush();
                         <textarea class="form-control" id="developer_info" name="developer_info" rows="3" required></textarea>
                     </div>
 
+                    <!-- New Section: Project Services -->
+                    <div class="mb-3">
+                        <label class="form-label">Required Services</label>
+                        <div class="row" id="services-container">
+                            <div class="col-md-6 mb-2">
+                                <select name="services[0][type]" class="form-control service-select" >
+                                    <option value="">Select Service</option>
+                                    <option value="none">None</option>
+                                    <option value="bricklaying">Bricklaying</option>
+                                    <option value="carpentry">Carpentry</option>
+                                    <option value="electrical">Electrical Work</option>
+                                    <option value="plumbing">Plumbing</option>
+                                    <option value="painting">Painting</option>
+                                    <option value="roofing">Roofing</option>
+                                    <option value="landscaping">Landscaping</option>
+                                    <option value="hvac">HVAC Installation</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <input type="number" name="services[0][hours]" class="form-control service-hours" 
+                                       placeholder="Total Hours" min="0" step="0.5" >
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <button type="button" id="add_service_btn" class="btn btn-primary">
+                                    <small>Add Service</small>
+                                </button>
+                            </div>
+                        </div>
+                        <ul id="selected_services_list" class="list-group mt-2"></ul>
+                    </div>
+
+                    <!-- New Section: Project Skills -->
+                    <div class="mb-3">
+                        <label class="form-label">Required Skills</label>
+                        <div class="row" id="skills-container">
+                            <div class="col-md-6 mb-2">
+                                <select name="skills[0][type]" class="form-control skill-select" >
+                                    <option value="">Select Skill</option>
+                                    <option value="none">None</option>
+                                    <option value="masonry">Masonry</option>
+                                    <option value="woodworking">Woodworking</option>
+                                    <option value="electrician">Electrician</option>
+                                    <option value="plumber">Plumber</option>
+                                    <option value="painter">Painter</option>
+                                    <option value="welder">Welder</option>
+                                    <option value="architect">Architectural Design</option>
+                                    <option value="civil_engineer">Civil Engineering</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <input type="number" name="skills[0][hours]" class="form-control skill-hours" 
+                                       placeholder="Total Hours" min="0" step="0.5" >
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <button type="button" id="add_skill_btn" class="btn btn-primary">
+                                    <small>Add Skill</small>
+                                </button>
+                            </div>
+                        </div>
+                        <ul id="selected_skills_list" class="list-group mt-2"></ul>
+                    </div>
           
 
 <div class="mb-3">
