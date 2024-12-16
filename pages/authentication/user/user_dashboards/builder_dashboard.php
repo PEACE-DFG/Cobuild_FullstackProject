@@ -753,7 +753,7 @@ ob_end_flush();
 
 <!-- Modals -->
 <!-- Edit Project Modal with Additional Fields -->
-<div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel" aria-hidden="true">
+<div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel" aria-hidden="true" >
     <div class="modal-dialog modal-lg">
         <div class="modal-content" style="overflow:scroll;height:500px">
             <form id="editProjectForm" method="POST" enctype="multipart/form-data">
@@ -855,7 +855,7 @@ ob_end_flush();
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                <table id="materials_table">
+                <table id="materials_table" >
     <thead>
         <tr>
             <th>Material Name</th>
@@ -876,6 +876,66 @@ ob_end_flush();
         </div>
     </div>
 </div>
+
+
+    <!-- Your project details content -->
+     <!-- Services Section -->
+     <!-- <div class="form-group" > -->
+    <!-- <label for="edit_project_services" class="font-weight-bold text-success">Project Services</label> -->
+<!-- Services Section -->
+<!-- <div id="edit_project_services" class="mb-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Services List</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="services_table" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Service Type</th>
+                            <th>Total Hours</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="services_table_body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div> -->
+
+<!-- Skills Section -->
+<!-- <div class="form-group">
+    <label for="edit_project_skills" class="font-weight-bold text-info">Project Skills</label>
+    <div id="edit_project_skills" class="mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Skills List</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="skills_table" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Skill Type</th>
+                                <th>Total Hours</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skills_table_body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> -->
+
+
+
+
 
 
                     <!-- Images Upload -->

@@ -668,3 +668,137 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+
+<!-- JavaScript to Populate Tables -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Get the project ID from the hidden input field
+    const projectIdInput = document.getElementById('project-id');
+    const projectId = projectIdInput ? projectIdInput.value : null;
+
+    // Check if projectId exists
+    if (!projectId) {
+        console.error('Project ID is not defined');
+        return;
+    }
+
+    // Fetch project details using XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', `./ajax/get_project.php?id=${projectId}`, true);
+
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            try {
+                const project = JSON.parse(xhr.responseText);
+
+                // Populate Materials Table
+                const materialsTableBody = document.getElementById('materials_table_body');
+                materialsTableBody.innerHTML = ''; // Clear existing content
+                project.building_materials.forEach(material => {
+                    const row = `
+                        <tr>
+                            <td>${material.material_name || 'N/A'}</td>
+                            <td>${material.category || 'N/A'}</td>
+                            <td>${material.quantity || 'N/A'}</td>
+                            <td>${material.unit || 'N/A'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="editMaterial(${material.id})">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteMaterial(${material.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                    materialsTableBody.insertAdjacentHTML('beforeend', row);
+                });
+
+                // Populate Services Table
+                const servicesTableBody = document.getElementById('services_table_body');
+                servicesTableBody.innerHTML = ''; // Clear existing content
+                project.services.forEach(service => {
+                    const row = `
+                        <tr>
+                            <td>${service.service_type || 'N/A'}</td>
+                            <td>${service.total_hours || 'N/A'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="editService(${service.id || 0})">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteService(${service.id || 0})">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                    servicesTableBody.insertAdjacentHTML('beforeend', row);
+                });
+
+                // Populate Skills Table
+                const skillsTableBody = document.getElementById('skills_table_body');
+                skillsTableBody.innerHTML = ''; // Clear existing content
+                project.skills.forEach(skill => {
+                    const row = `
+                        <tr>
+                            <td>${skill.skill_type || 'N/A'}</td>
+                            <td>${skill.total_hours || 'N/A'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="editSkill(${skill.id || 0})">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteSkill(${skill.id || 0})">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                    skillsTableBody.insertAdjacentHTML('beforeend', row);
+                });
+            } catch (error) {
+                console.error('Error parsing JSON response:', error);
+                showErrorMessage('Failed to load project details. Please try again later.');
+            }
+        } else {
+            console.error('Request failed with status:', xhr.status);
+            showErrorMessage('Failed to load project details. Please try again later.');
+        }
+    };
+
+    xhr.onerror = function () {
+        console.error('Network error occurred');
+        showErrorMessage('Failed to load project details. Please check your internet connection.');
+    };
+
+    xhr.send();
+
+    // Function to show error messages
+    function showErrorMessage(message) {
+        const errorContainer = document.createElement('div');
+        errorContainer.className = 'alert alert-danger';
+        errorContainer.textContent = message;
+        document.getElementById('project-details-container').prepend(errorContainer);
+    }
+
+    // Placeholder functions for edit and delete actions
+    function editMaterial(id) {
+        // Implement edit material logic
+        console.log('Edit material', id);
+    }
+
+    function deleteMaterial(id) {
+        // Implement delete material logic
+        console.log('Delete material', id);
+    }
+
+    function editService(id) {
+        // Implement edit service logic
+        console.log('Edit service', id);
+    }
+
+    function deleteService(id) {
+        // Implement delete service logic
+        console.log('Delete service', id);
+    }
+
+    function editSkill(id) {
+        // Implement edit skill logic
+        console.log('Edit skill', id);
+    }
+
+    function deleteSkill(id) {
+        // Implement delete skill logic
+        console.log('Delete skill', id);
+    }
+});
+
+</script>

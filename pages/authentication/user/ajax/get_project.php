@@ -35,8 +35,38 @@ if (isset($_GET['id'])) {
             $building_materials[] = $material;
         }
 
-        // Add building materials to the project data
+        // Fetch services for the project
+        $service_query = $conn->prepare("
+            SELECT service_type, total_hours 
+            FROM project_services 
+            WHERE project_id = ?
+        ");
+        $service_query->bind_param("i", $project_id);
+        $service_query->execute();
+        $services_result = $service_query->get_result();
+        $project_services = [];
+        while ($service = $services_result->fetch_assoc()) {
+            $project_services[] = $service;
+        }
+
+        // Fetch skills for the project
+        $skill_query = $conn->prepare("
+            SELECT skill_type, total_hours 
+            FROM project_skills 
+            WHERE project_id = ?
+        ");
+        $skill_query->bind_param("i", $project_id);
+        $skill_query->execute();
+        $skills_result = $skill_query->get_result();
+        $project_skills = [];
+        while ($skill = $skills_result->fetch_assoc()) {
+            $project_skills[] = $skill;
+        }
+
+        // Add building materials, services, and skills to the project data
         $project['building_materials'] = $building_materials;
+        $project['services'] = $project_services;
+        $project['skills'] = $project_skills;
 
         // Return the project data as JSON
         echo json_encode($project);
