@@ -96,6 +96,30 @@ echo "<script>
     var globalProjectMaterials = " . json_encode($projects) . ";
 </script>";
 
+// Fetch project services
+$stmt = $conn->prepare("SELECT 
+   id,
+    project_id,
+    service_type,
+    total_hours
+    FROM project_services
+    WHERE project_id = ?");
+$stmt->bind_param("i", $project_id);  // Assuming $project_id is defined earlier
+$stmt->execute();
+$project_services = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+// Fetch project skills
+$stmt = $conn->prepare("SELECT 
+    id,
+    project_id,
+    skill_type,
+    total_hours
+    FROM project_skills
+    WHERE project_id = ?");
+$stmt->bind_param("i", $project_id);
+$stmt->execute();
+$project_skills = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
 ?>
 
 <style>
@@ -310,6 +334,45 @@ echo "<script>
     background: #f9f9f9; /* Alternating background for cards */
 }
 
+.service-card, .skill-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  margin: 8px 0;
+  background: #fff;
+}
+
+.service-header, .skill-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.service-header h3, .skill-header h3 {
+  font-size: 1.2rem;
+  margin: 0;
+  color: #333;
+}
+
+.service-category, .skill-category {
+  font-size: 0.9rem;
+  color: #555;
+  background: #f4f4f4;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+.service-details p, .skill-details p {
+  margin: 0;
+  font-size: 1rem;
+  color: #666;
+}
+
+.service-card:nth-child(even), .skill-card:nth-child(even) {
+  background: #f9f9f9; /* Alternating background for cards */
+}
 
 </style>
 
@@ -474,6 +537,14 @@ echo "<script>
                 <span id="modal_description"></span>
             </div>
         </div>
+        <div class="detail-card">
+    <strong>Project Services</strong>
+    <div id="modal_project_services"></div>
+</div>
+<div class="detail-card">
+    <strong>Required Skills</strong>
+    <div id="modal_project_skills"></div>
+</div>
 
         <div class="images-section">
             <h2 style="margin-bottom: 20px; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">Project Images</h2>
@@ -775,6 +846,63 @@ function showProjectDetails(project) {
         },
         error: function(xhr, status, error) {
             console.error("Error fetching materials:", error);
+        }
+
+        
+    });
+
+     // Add these AJAX calls after the materials fetch
+     $.ajax({
+        url: './ajax/get_project_services.php',
+        method: 'POST',
+        data: { project_id: project.id },
+        dataType: 'json',
+        success: function(services) {
+            let servicesHTML = '';
+            services.forEach(service => {
+                servicesHTML += `
+                    <div class="service-card">
+                        <div class="service-header">
+                            <h3>${service.service_type}</h3>
+                            <span class="service-category">${service.service_type}</span>
+                        </div>
+                        <div class="service-details">
+                            <p><strong>Total Hours:</strong> ${service.total_hours || 'No description available'}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('modal_project_services').innerHTML = servicesHTML;
+        },
+        error: function(xhr, status, error) {
+            console.error("Error fetching services:", error);
+        }
+    });
+
+    $.ajax({
+        url: './ajax/get_project_skills.php',
+        method: 'POST',
+        data: { project_id: project.id },
+        dataType: 'json',
+        success: function(skills) {
+            let skillsHTML = '';
+            skills.forEach(skill => {
+                skillsHTML += `
+                    <div class="skill-card">
+                        <div class="skill-header">
+                            <h3>${skill.skill_type}</h3>
+                            <span class="skill-category">${skill.skill_type}</span>
+                        </div>
+                        <div class="skill-details">
+                            <p><strong>Total Hours:</strong> ${skill.total_hours}</p>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('modal_project_skills').innerHTML = skillsHTML;
+        },
+        error: function(xhr, status, error) {
+            console.error("Error fetching skills:", error);
         }
     });
 
