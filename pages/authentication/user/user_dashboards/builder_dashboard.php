@@ -876,68 +876,6 @@ ob_end_flush();
         </div>
     </div>
 </div>
-
-
-    <!-- Your project details content -->
-     <!-- Services Section -->
-     <!-- <div class="form-group" > -->
-    <!-- <label for="edit_project_services" class="font-weight-bold text-success">Project Services</label> -->
-<!-- Services Section -->
-<!-- <div id="edit_project_services" class="mb-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-success text-white">
-            <h5 class="mb-0">Services List</h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table id="services_table" class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Service Type</th>
-                            <th>Total Hours</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="services_table_body">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div> -->
-
-<!-- Skills Section -->
-<!-- <div class="form-group">
-    <label for="edit_project_skills" class="font-weight-bold text-info">Project Skills</label>
-    <div id="edit_project_skills" class="mb-4">
-        <div class="card shadow-sm">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">Skills List</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="skills_table" class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Skill Type</th>
-                                <th>Total Hours</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="skills_table_body">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div> -->
-
-
-
-
-
-
                     <!-- Images Upload -->
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -965,209 +903,211 @@ ob_end_flush();
     </div>
 </div>
 
-<!-- New Project Modal with Additional Fields -->
-<div class="modal fade" id="newProjectModal" tabindex="-1" aria-labelledby="newProjectModalLabel" aria-hidden="true" >
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content" style="overflow:scroll;height:500px">
-            <form action="dashboard.php" method="POST" enctype="multipart/form-data">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="newProjectModalLabel">Create New Project</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <!-- New Project Modal with Additional Fields -->
+        <div class="modal fade" id="newProjectModal" tabindex="-1" aria-labelledby="newProjectModalLabel" aria-hidden="true" >
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content" style="overflow:scroll;height:500px">
+                    <form action="dashboard.php" method="POST" enctype="multipart/form-data">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="newProjectModalLabel">Create New Project</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="create_project">
+                            
+                            <!-- Basic Project Information -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="title" class="form-label">Project Title</label>
+                                    <input type="text" class="form-control" id="title" name="title" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="project_category" class="form-label">Project Category</label>
+                                <select class="form-control"  name="project_category" required>
+                                        <option value="">Select Category</option>
+                                        <option value="1">Residential</option>
+                                        <option value="2">Commercial</option>
+                                        <option value="3">Industrial</option>
+                                        <option value="4">Renovation</option>
+                                        <option value="5">Sustainable</option>
+                                        <option value="6">Infrastructure</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Location and Description -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="location" class="form-label">Location</label>
+                                    <input type="text" class="form-control" id="location" name="location" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Financial Information -->
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="total_project_cost" class="form-label">Total Project Cost</label>
+                                    <input type="number" class="form-control" id="total_project_cost" name="total_project_cost" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="investment_goal" class="form-label">Investment Goal</label>
+                                    <input type="number" class="form-control" id="investment_goal" name="investment_goal" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="projected_revenue" class="form-label">Projected Revenue</label>
+                                    <input type="number" class="form-control" id="projected_revenue" name="projected_revenue" required>
+                                </div>
+                            </div>
+
+                            <!-- Investment Types -->
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Investment Types Available</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="investment_types[]" value="interest_bond" id="interest_bond">
+                                        <label class="form-check-label" for="interest_bond">Interest Yielding Bond</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="investment_types[]" value="profit_sharing" id="profit_sharing">
+                                        <label class="form-check-label" for="profit_sharing">Profit Sharing</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="investment_types[]" value="equity" id="equity">
+                                        <label class="form-check-label" for="equity">Equity</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <label for="projected_profit" class="form-label">Projected Profit</label>
+                                    <input type="number" class="form-control" id="projected_profit" name="projected_profit" required>
+                                </div>
+                            </div>
+
+                            <!-- Developer Information -->
+                            <div class="mb-3">
+                                <label for="developer_info" class="form-label">Developer Information</label>
+                                <textarea class="form-control" id="developer_info" name="developer_info" rows="3" required></textarea>
+                            </div>
+
+                            <!-- New Section: Project Services -->
+                            <div class="mb-3">
+                                <label class="form-label">Required Services</label>
+                                <div class="row" id="services-container">
+                                    <div class="col-md-6 mb-2">
+                                        <select name="services[0][type]" class="form-control service-select" >
+                                            <option value="">Select Service</option>
+                                            <option value="none">None</option>
+                                            <option value="bricklaying">Bricklaying</option>
+                                            <option value="carpentry">Carpentry</option>
+                                            <option value="electrical">Electrical Work</option>
+                                            <option value="plumbing">Plumbing</option>
+                                            <option value="painting">Painting</option>
+                                            <option value="roofing">Roofing</option>
+                                            <option value="landscaping">Landscaping</option>
+                                            <option value="hvac">HVAC Installation</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <input type="number" name="services[0][hours]" class="form-control service-hours" 
+                                            placeholder="Total Hours" min="0" step="0.5" >
+                                    </div>
+                                    <div class="col-md-2 mb-2">
+                                        <button type="button" id="add_service_btn" class="btn btn-primary">
+                                            <small>Add Service</small>
+                                        </button>
+                                    </div>
+                                </div>
+                                <ul id="selected_services_list" class="list-group mt-2"></ul>
+                            </div>
+
+                            <!-- New Section: Project Skills -->
+                            <div class="mb-3">
+                                <label class="form-label">Required Skills</label>
+                                <div class="row" id="skills-container">
+                                    <div class="col-md-6 mb-2">
+                                        <select name="skills[0][type]" class="form-control skill-select" >
+                                            <option value="">Select Skill</option>
+                                            <option value="none">None</option>
+                                            <option value="masonry">Masonry</option>
+                                            <option value="woodworking">Woodworking</option>
+                                            <option value="electrician">Electrician</option>
+                                            <option value="plumber">Plumber</option>
+                                            <option value="painter">Painter</option>
+                                            <option value="welder">Welder</option>
+                                            <option value="architect">Architectural Design</option>
+                                            <option value="civil_engineer">Civil Engineering</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <input type="number" name="skills[0][hours]" class="form-control skill-hours" 
+                                            placeholder="Total Hours" min="0" step="0.5" >
+                                    </div>
+                                    <div class="col-md-2 mb-2">
+                                        <button type="button" id="add_skill_btn" class="btn btn-primary">
+                                            <small>Add Skill</small>
+                                        </button>
+                                    </div>
+                                </div>
+                                <ul id="selected_skills_list" class="list-group mt-2"></ul>
+                            </div>
+                
+
+        <div class="mb-3">
+            <label class="form-label">Project Materials</label>
+            <div class="row mb-2" id="materials-container">
+                <div class="col-md-4 my-3">
+                    <select name="materials[0][category]" class="form-control" id="material_category" >
+                        <option value="">Select Category</option>
+                        <!-- Populate categories -->
+                    </select>
                 </div>
-                <div class="modal-body">
-                    <input type="hidden" name="action" value="create_project">
-                    
-                    <!-- Basic Project Information -->
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="title" class="form-label">Project Title</label>
-                            <input type="text" class="form-control" id="title" name="title" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="project_category" class="form-label">Project Category</label>
-                          <select class="form-control"  name="project_category" required>
-                                <option value="">Select Category</option>
-                                <option value="1">Residential</option>
-                                <option value="2">Commercial</option>
-                                <option value="3">Industrial</option>
-                                <option value="4">Renovation</option>
-                                <option value="5">Sustainable</option>
-                                <option value="6">Infrastructure</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Location and Description -->
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="location" class="form-label">Location</label>
-                            <input type="text" class="form-control" id="location" name="location" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="description" class="form-label">Description</label>
-                            <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Financial Information -->
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label for="total_project_cost" class="form-label">Total Project Cost</label>
-                            <input type="number" class="form-control" id="total_project_cost" name="total_project_cost" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="investment_goal" class="form-label">Investment Goal</label>
-                            <input type="number" class="form-control" id="investment_goal" name="investment_goal" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="projected_revenue" class="form-label">Projected Revenue</label>
-                            <input type="number" class="form-control" id="projected_revenue" name="projected_revenue" required>
-                        </div>
-                    </div>
-
-                    <!-- Investment Types -->
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Investment Types Available</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="investment_types[]" value="interest_bond" id="interest_bond">
-                                <label class="form-check-label" for="interest_bond">Interest Yielding Bond</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="investment_types[]" value="profit_sharing" id="profit_sharing">
-                                <label class="form-check-label" for="profit_sharing">Profit Sharing</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="investment_types[]" value="equity" id="equity">
-                                <label class="form-check-label" for="equity">Equity</label>
-                            </div>
-                        </div>
-                        <div class="col-md-8">
-                            <label for="projected_profit" class="form-label">Projected Profit</label>
-                            <input type="number" class="form-control" id="projected_profit" name="projected_profit" required>
-                        </div>
-                    </div>
-
-                    <!-- Developer Information -->
-                    <div class="mb-3">
-                        <label for="developer_info" class="form-label">Developer Information</label>
-                        <textarea class="form-control" id="developer_info" name="developer_info" rows="3" required></textarea>
-                    </div>
-
-                    <!-- New Section: Project Services -->
-                    <div class="mb-3">
-                        <label class="form-label">Required Services</label>
-                        <div class="row" id="services-container">
-                            <div class="col-md-6 mb-2">
-                                <select name="services[0][type]" class="form-control service-select" >
-                                    <option value="">Select Service</option>
-                                    <option value="none">None</option>
-                                    <option value="bricklaying">Bricklaying</option>
-                                    <option value="carpentry">Carpentry</option>
-                                    <option value="electrical">Electrical Work</option>
-                                    <option value="plumbing">Plumbing</option>
-                                    <option value="painting">Painting</option>
-                                    <option value="roofing">Roofing</option>
-                                    <option value="landscaping">Landscaping</option>
-                                    <option value="hvac">HVAC Installation</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <input type="number" name="services[0][hours]" class="form-control service-hours" 
-                                       placeholder="Total Hours" min="0" step="0.5" >
-                            </div>
-                            <div class="col-md-2 mb-2">
-                                <button type="button" id="add_service_btn" class="btn btn-primary">
-                                    <small>Add Service</small>
-                                </button>
-                            </div>
-                        </div>
-                        <ul id="selected_services_list" class="list-group mt-2"></ul>
-                    </div>
-
-                    <!-- New Section: Project Skills -->
-                    <div class="mb-3">
-                        <label class="form-label">Required Skills</label>
-                        <div class="row" id="skills-container">
-                            <div class="col-md-6 mb-2">
-                                <select name="skills[0][type]" class="form-control skill-select" >
-                                    <option value="">Select Skill</option>
-                                    <option value="none">None</option>
-                                    <option value="masonry">Masonry</option>
-                                    <option value="woodworking">Woodworking</option>
-                                    <option value="electrician">Electrician</option>
-                                    <option value="plumber">Plumber</option>
-                                    <option value="painter">Painter</option>
-                                    <option value="welder">Welder</option>
-                                    <option value="architect">Architectural Design</option>
-                                    <option value="civil_engineer">Civil Engineering</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <input type="number" name="skills[0][hours]" class="form-control skill-hours" 
-                                       placeholder="Total Hours" min="0" step="0.5" >
-                            </div>
-                            <div class="col-md-2 mb-2">
-                                <button type="button" id="add_skill_btn" class="btn btn-primary">
-                                    <small>Add Skill</small>
-                                </button>
-                            </div>
-                        </div>
-                        <ul id="selected_skills_list" class="list-group mt-2"></ul>
-                    </div>
-          
-
-<div class="mb-3">
-    <label class="form-label">Project Materials</label>
-    <div class="row mb-2" id="materials-container">
-        <div class="col-md-4 my-3">
-            <select name="materials[0][category]" class="form-control" id="material_category" >
-                <option value="">Select Category</option>
-                <!-- Populate categories -->
-            </select>
-        </div>
-        <div class="col-md-4 my-3">
-            <select name="materials[0][name]" class="form-control"  id="material_name">
-                <option value="">Select Material</option>
-                <!-- Populate materials -->
-            </select>
-        </div>
-        <div class="col-md-2 my-3">
-            <input type="number"   id="material_quantity"name="materials[0][quantity]" class="form-control" placeholder="Quantity" min="1">
-        </div>
-        <div class="col-md-2 my-3">
-            <button type="button" id="add_material_btn" class="btn btn-primary"><small>Add Material</small></button>
-        </div>
-    </div>
-    <ul id="selected_materials_list" class="list-group mt-2"></ul>
-</div>
-
-                    <!-- Images Upload -->
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="featured_image" class="form-label">Featured Image</label>
-                            <input type="file" class="form-control" id="featured_image" name="featured_image" accept="image/*" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="additional_images" class="form-label">Additional Images</label>
-                            <input type="file" class="form-control" id="additional_images" name="additional_images[]" accept="image/*" multiple>
-                        </div>
-                    </div>
-
-                    <!-- Land Title Document -->
-                    <div class="mb-3">
-                        <label for="land_title" class="form-label">Land Title Document (Required)</label>
-                        <input type="file" class="form-control" id="land_title" name="land_title" required>
-                    </div>
+                <div class="col-md-4 my-3">
+                    <select name="materials[0][name]" class="form-control"  id="material_name">
+                        <option value="">Select Material</option>
+                        <!-- Populate materials -->
+                    </select>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Create Project</button>
+                <div class="col-md-2 my-3">
+                    <input type="number"   id="material_quantity"name="materials[0][quantity]" class="form-control" placeholder="Quantity" min="1">
                 </div>
-            </form>
+                <div class="col-md-2 my-3">
+                    <button type="button" id="add_material_btn" class="btn btn-primary"><small>Add Material</small></button>
+                </div>
+            </div>
+            <ul id="selected_materials_list" class="list-group mt-2"></ul>
         </div>
-    </div>
-</div>
+
+                            <!-- Images Upload -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="featured_image" class="form-label">Featured Image</label>
+                                    <input type="file" class="form-control" id="featured_image" name="featured_image" accept="image/*" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="additional_images" class="form-label">Additional Images</label>
+                                    <input type="file" class="form-control" id="additional_images" name="additional_images[]" accept="image/*" multiple>
+                                </div>
+                            </div>
+
+                            <!-- Land Title Document -->
+                            <div class="mb-3">
+                                <label for="land_title" class="form-label">Land Title Document (Required)</label>
+                                <input type="file" class="form-control" id="land_title" name="land_title" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Create Project</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
 <?php if (isset($_SESSION['success_message'])): ?>
     <div class="alert alert-success">
         <?php 

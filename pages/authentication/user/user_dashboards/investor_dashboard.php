@@ -804,6 +804,10 @@ new Chart(trendsCtx, {
 
 
 function showProjectDetails(project) {
+
+      // Ensure the project object is fully populated
+      console.log("Setting current project:", project);
+    window.currentSelectedProject = project;
     const setText = (id, value) => {
         const element = document.getElementById(id);
         if (element) {
@@ -1027,7 +1031,356 @@ function openZoomModal(imageSrc) {
 
 function verifyProject() {
     // Implement verification functionality here
-    alert("Project verification in progress...");
+    // alert("Project verification in progress...");
+
+    const investmentTypeModal = `
+    <div class="modal fade" id="investmentTypeModal" tabindex="-1" aria-labelledby="investmentTypeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="investmentTypeModalLabel">Select Investment Type</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary btn-lg" onclick="showInvestmentModal('cash')">Cash Investment</button>
+                        <button class="btn btn-success btn-lg" onclick="showInvestmentModal('skill')">Skill Investment</button>
+                        <button class="btn btn-info btn-lg" onclick="showInvestmentModal('service')">Service Investment</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+
+        // Create and show the cash investment modal
+        const cashInvestmentModal = `
+    <div class="modal fade" id="cashInvestmentModal" tabindex="-1" aria-labelledby="cashInvestmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cashInvestmentModalLabel">Cash Investment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="totalProjectCost" class="form-label">Total Project Cost</label>
+                        <input type="text" class="form-control" id="totalProjectCost" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="remainingInvestment" class="form-label">Remaining Investment Needed</label>
+                        <input type="text" class="form-control" id="remainingInvestment" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="investmentAmount" class="form-label">Your Investment Amount</label>
+                        <input type="number" class="form-control" id="investmentAmount" placeholder="Enter investment amount">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="processCashInvestment()">Invest</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+
+     // Create and show the skill investment modal
+     const skillInvestmentModal = `
+    <div class="modal fade" id="skillInvestmentModal" tabindex="-1" aria-labelledby="skillInvestmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="skillInvestmentModalLabel">Skill Investment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="availableSkillsContainer">
+                        <!-- Skills will be dynamically populated here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="processSkillInvestment()">Submit Skill Investment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+
+    // Create and show the service investment modal
+    const serviceInvestmentModal = `
+    <div class="modal fade" id="serviceInvestmentModal" tabindex="-1" aria-labelledby="serviceInvestmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="serviceInvestmentModalLabel">Service Investment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="availableServicesContainer">
+                        <!-- Services will be dynamically populated here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="processServiceInvestment()">Submit Service Investment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+
+      // Append modals to body
+      $('body').append(investmentTypeModal + cashInvestmentModal + skillInvestmentModal + serviceInvestmentModal);
+
+// Show the investment type modal
+const investmentTypeModalInstance = new bootstrap.Modal(document.getElementById('investmentTypeModal'));
+investmentTypeModalInstance.show();
+
+
+
 }
+
+
+function showInvestmentModal(type) {
+    
+    // Close the investment type modal
+    const investmentTypeModalInstance = bootstrap.Modal.getInstance(document.getElementById('investmentTypeModal'));
+    investmentTypeModalInstance.hide();
+
+    // Current selected project (assuming it's stored globally or passed correctly)
+    const currentProject = window.currentSelectedProject;
+       // Add null/undefined check
+       if (!window.currentSelectedProject) {
+        console.error("No project selected");
+        showNotification("Please select a project first", false);
+        return;
+    }
+
+    // Rest of the existing function...
+   // const currentProject = window.currentSelectedProject;
+
+    // Add more robust checks
+    if (!currentProject.total_project_cost) {
+        console.error("Project details incomplete", currentProject);
+        showNotification("Project details are incomplete", false);
+        return;
+    }
+
+    if (type === 'cash') {
+        // Populate cash investment modal with project details
+        $('#totalProjectCost').val(currentProject.total_project_cost);
+        $('#remainingInvestment').val(currentProject.investment_goal);
+
+        const cashInvestmentModalInstance = new bootstrap.Modal(document.getElementById('cashInvestmentModal'));
+        cashInvestmentModalInstance.show();
+    } else if (type === 'skill') {
+        // Fetch and populate available skills
+        $.ajax({
+            url: './ajax/get_available_skills.php',
+            method: 'POST',
+            data: { project_id: currentProject.id },
+            dataType: 'json',
+            success: function(skills) {
+                let skillsHTML = '';
+                skills.forEach(skill => {
+                    skillsHTML += `
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" 
+                                   name="skills[]" 
+                                   value="${skill.id}" 
+                                   id="skill_${skill.id}">
+                            <label class="form-check-label" for="skill_${skill.id}">
+                                ${skill.skill_type} (${skill.total_hours} hours) 
+                            </label>
+                        </div>
+                    `;
+                });
+                $('#availableSkillsContainer').html(skillsHTML);
+
+                const skillInvestmentModalInstance = new bootstrap.Modal(document.getElementById('skillInvestmentModal'));
+                skillInvestmentModalInstance.show();
+            },
+            error: function(xhr, status, error) {
+                console.error("Error fetching skills:", error);
+                showNotification("Failed to load available skills", false);
+            }
+        });
+    } else if (type === 'service') {
+        // Fetch and populate available services
+        $.ajax({
+            url: './ajax/get_available_services.php',
+            method: 'POST',
+            data: { project_id: currentProject.id },
+            dataType: 'json',
+            success: function(services) {
+                let servicesHTML = '';
+                services.forEach(service => {
+                    servicesHTML += `
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" 
+                                   name="services[]" 
+                                   value="${service.id}" 
+                                   id="service_${service.id}">
+                            <label class="form-check-label" for="service_${service.id}">
+                                ${service.service_type} (${service.total_hours} hours)
+                            </label>
+                        </div>
+                    `;
+                });
+                $('#availableServicesContainer').html(servicesHTML);
+
+                const serviceInvestmentModalInstance = new bootstrap.Modal(document.getElementById('serviceInvestmentModal'));
+                serviceInvestmentModalInstance.show();
+            },
+            error: function(xhr, status, error) {
+                console.error("Error fetching services:", error);
+                showNotification("Failed to load available services", false);
+            }
+        });
+    }
+}
+
+// Add this function to check user type
+function getUserType() {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: './ajax/get_user_type.php',
+            method: 'GET',
+            success: function(response) {
+                resolve(response.user_type);
+            },
+            error: function(xhr, status, error) {
+                reject(error);
+            }
+        });
+    });
+}
+
+// Modify the investment processing functions
+function processCashInvestment() {
+    getUserType().then(userType => {
+        if (userType !== 'investor') {
+            showNotification("Only investors can make investments", false);
+            return;
+        }
+
+        const investmentAmount = parseFloat($('#investmentAmount').val());
+        const remainingInvestment = parseFloat($('#remainingInvestment').val());
+        const currentProject = window.currentSelectedProject;
+
+        if (isNaN(investmentAmount) || investmentAmount <= 0) {
+            showNotification("Please enter a valid investment amount", false);
+            return;
+        }
+
+        if (investmentAmount > remainingInvestment) {
+            showNotification("Investment amount exceeds project needs", false);
+            return;
+        }
+
+        $.ajax({
+            url: './ajax/process_investment_intention.php',
+            method: 'POST',
+            data: {
+                project_id: currentProject.id,
+                investment_type: 'cash',
+                amount: investmentAmount
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    showNotification("Investment intention submitted successfully! Awaiting developer approval.", true);
+                    const cashInvestmentModalInstance = bootstrap.Modal.getInstance(document.getElementById('cashInvestmentModal'));
+                    cashInvestmentModalInstance.hide();
+                } else {
+                    showNotification(response.message || "Failed to submit investment intention", false);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error submitting investment intention:", error);
+                showNotification("Failed to submit investment intention", false);
+            }
+        });
+    }).catch(error => {
+        showNotification("Error verifying user type", false);
+    });
+}
+
+// Add get_user_type.php file
+
+function processSkillInvestment() {
+    const selectedSkills = $('input[name="skills[]"]:checked').map(function() {
+        return this.value;
+    }).get();
+    const currentProject = window.currentSelectedProject;
+
+    if (selectedSkills.length === 0) {
+        showNotification("Please select at least one skill", false);
+        return;
+    }
+
+    $.ajax({
+        url: './ajax/process_investment_intention.php',
+        method: 'POST',
+        data: {
+            project_id: currentProject.id,
+            investment_type: 'skill',
+            investment_details: JSON.stringify(selectedSkills)
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                showNotification("Skill investment intention submitted successfully! Awaiting developer approval.", true);
+                const skillInvestmentModalInstance = bootstrap.Modal.getInstance(document.getElementById('skillInvestmentModal'));
+                skillInvestmentModalInstance.hide();
+            } else {
+                showNotification(response.message || "Failed to submit skill investment intention", false);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("Error submitting skill investment intention:", error);
+            showNotification("Failed to submit skill investment intention", false);
+        }
+    });
+}
+
+function processServiceInvestment() {
+    const selectedServices = $('input[name="services[]"]:checked').map(function() {
+        return this.value;
+    }).get();
+    const currentProject = window.currentSelectedProject;
+
+    if (selectedServices.length === 0) {
+        showNotification("Please select at least one service", false);
+        return;
+    }
+
+    $.ajax({
+        url: './ajax/process_investment_intention.php',
+        method: 'POST',
+        data: {
+            project_id: currentProject.id,
+            investment_type: 'service',
+            investment_details: JSON.stringify(selectedServices)
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                showNotification("Service investment intention submitted successfully! Awaiting developer approval.", true);
+                const serviceInvestmentModalInstance = bootstrap.Modal.getInstance(document.getElementById('serviceInvestmentModal'));
+                serviceInvestmentModalInstance.hide();
+            } else {
+                showNotification(response.message || "Failed to submit service investment intention", false);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("Error submitting service investment intention:", error);
+            showNotification("Failed to submit service investment intention", false);
+        }
+    });
+}
+
 
 </script>

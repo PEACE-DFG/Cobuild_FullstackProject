@@ -392,7 +392,7 @@ if (isset($_SESSION['user_id'])) {
             </div>
         </div>
     </div>
-</section>
+		</section>
 
 <marquee behavior="" direction="" style="background-color: rgb(9, 9, 153); color:white;">
 		
@@ -405,7 +405,7 @@ if (isset($_SESSION['user_id'])) {
 				<div class="col-md-8 col-md-offset-2 heading animate-box" data-animate-effect="fadeIn">
 					<h1>About Us</h1>
 					<p class="sub" style="
-  color:  #0f1133;
+  				color:  #0f1133;
 					" >Cobuild is a leading global platform to raise funds, invest and trade investments in real estate projects at your fingertips. Our creative platform seeks to unlock abundance in real estate financing: offering democratized access to investors and fund raisers in form of building materials, land, building services, labor, sales and cash.</p>
 					<p class="subtle-text animate-box" data-animate-effect="fadeIn">AboutUs</p>
 				</div>
@@ -414,11 +414,6 @@ if (isset($_SESSION['user_id'])) {
 				
 				<div class="col-md-6 col-md-pull-1 animate-box" data-animate-effect="fadeInLeft">
 					<div class="img-shadow">
-						<!-- <video autoplay muted loop playsinline class="responsive-video">
-							<source src="images/cobuild_2.mp4" type="video/mp4">
-							Your browser does not support the video tag.
-					</video> -->
-					
 						<img src="images/side2.jpg" class="img-responsive" alt="">
 					</div>
 				</div>
