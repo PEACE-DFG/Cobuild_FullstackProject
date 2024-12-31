@@ -1,378 +1,257 @@
-function verifyProject() {
-    // Create and show the investment type selection modal
-    const investmentTypeModal = `
-    <div class="modal fade" id="investmentTypeModal" tabindex="-1" aria-labelledby="investmentTypeModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="investmentTypeModalLabel">Select Investment Type</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-primary btn-lg" onclick="showInvestmentModal('cash')">Cash Investment</button>
-                        <button class="btn btn-success btn-lg" onclick="showInvestmentModal('skill')">Skill Investment</button>
-                        <button class="btn btn-info btn-lg" onclick="showInvestmentModal('service')">Service Investment</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    `;
-
-    // Create and show the cash investment modal
-    const cashInvestmentModal = `
-    <div class="modal fade" id="cashInvestmentModal" tabindex="-1" aria-labelledby="cashInvestmentModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="cashInvestmentModalLabel">Cash Investment</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="totalProjectCost" class="form-label">Total Project Cost</label>
-                        <input type="text" class="form-control" id="totalProjectCost" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label for="remainingInvestment" class="form-label">Remaining Investment Needed</label>
-                        <input type="text" class="form-control" id="remainingInvestment" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label for="investmentAmount" class="form-label">Your Investment Amount</label>
-                        <input type="number" class="form-control" id="investmentAmount" placeholder="Enter investment amount">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="processCashInvestment()">Invest</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    `;
-
-    // Create and show the skill investment modal
-    const skillInvestmentModal = `
-    <div class="modal fade" id="skillInvestmentModal" tabindex="-1" aria-labelledby="skillInvestmentModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="skillInvestmentModalLabel">Skill Investment</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="availableSkillsContainer">
-                        <!-- Skills will be dynamically populated here -->
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="processSkillInvestment()">Submit Skill Investment</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    `;
-
-    // Create and show the service investment modal
-    const serviceInvestmentModal = `
-    <div class="modal fade" id="serviceInvestmentModal" tabindex="-1" aria-labelledby="serviceInvestmentModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="serviceInvestmentModalLabel">Service Investment</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="availableServicesContainer">
-                        <!-- Services will be dynamically populated here -->
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="processServiceInvestment()">Submit Service Investment</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    `;
-
-    // Append modals to body
-    $('body').append(investmentTypeModal + cashInvestmentModal + skillInvestmentModal + serviceInvestmentModal);
-
-    // Show the investment type modal
-    const investmentTypeModalInstance = new bootstrap.Modal(document.getElementById('investmentTypeModal'));
-    investmentTypeModalInstance.show();
-}
-
-function showInvestmentModal(type) {
-    // Close the investment type modal
-    const investmentTypeModalInstance = bootstrap.Modal.getInstance(document.getElementById('investmentTypeModal'));
-    investmentTypeModalInstance.hide();
-
-    // Current selected project (assuming it's stored globally or passed correctly)
-    const currentProject = window.currentSelectedProject;
-
-    if (type === 'cash') {
-        // Populate cash investment modal with project details
-        $('#totalProjectCost').val(currentProject.total_project_cost);
-        $('#remainingInvestment').val(currentProject.investment_goal);
-
-        const cashInvestmentModalInstance = new bootstrap.Modal(document.getElementById('cashInvestmentModal'));
-        cashInvestmentModalInstance.show();
-    } else if (type === 'skill') {
-        // Fetch and populate available skills
-        $.ajax({
-            url: './ajax/get_available_skills.php',
-            method: 'POST',
-            data: { project_id: currentProject.id },
-            dataType: 'json',
-            success: function(skills) {
-                let skillsHTML = '';
-                skills.forEach(skill => {
-                    skillsHTML += `
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" 
-                                   name="skills[]" 
-                                   value="${skill.id}" 
-                                   id="skill_${skill.id}">
-                            <label class="form-check-label" for="skill_${skill.id}">
-                                ${skill.skill_name} (${skill.skill_category})
-                            </label>
-                        </div>
-                    `;
-                });
-                $('#availableSkillsContainer').html(skillsHTML);
-
-                const skillInvestmentModalInstance = new bootstrap.Modal(document.getElementById('skillInvestmentModal'));
-                skillInvestmentModalInstance.show();
-            },
-            error: function(xhr, status, error) {
-                console.error("Error fetching skills:", error);
-                showNotification("Failed to load available skills", false);
-            }
-        });
-    } else if (type === 'service') {
-        // Fetch and populate available services
-        $.ajax({
-            url: './ajax/get_available_services.php',
-            method: 'POST',
-            data: { project_id: currentProject.id },
-            dataType: 'json',
-            success: function(services) {
-                let servicesHTML = '';
-                services.forEach(service => {
-                    servicesHTML += `
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" 
-                                   name="services[]" 
-                                   value="${service.id}" 
-                                   id="service_${service.id}">
-                            <label class="form-check-label" for="service_${service.id}">
-                                ${service.service_name} (${service.service_category})
-                            </label>
-                        </div>
-                    `;
-                });
-                $('#availableServicesContainer').html(servicesHTML);
-
-                const serviceInvestmentModalInstance = new bootstrap.Modal(document.getElementById('serviceInvestmentModal'));
-                serviceInvestmentModalInstance.show();
-            },
-            error: function(xhr, status, error) {
-                console.error("Error fetching services:", error);
-                showNotification("Failed to load available services", false);
-            }
-        });
-    }
-}
-
-function processCashInvestment() {
-    const investmentAmount = parseFloat($('#investmentAmount').val());
-    const remainingInvestment = parseFloat($('#remainingInvestment').val());
-    const currentProject = window.currentSelectedProject;
-
-    if (isNaN(investmentAmount) || investmentAmount <= 0) {
-        showNotification("Please enter a valid investment amount", false);
-        return;
-    }
-
-    if (investmentAmount > remainingInvestment) {
-        showNotification("Investment amount exceeds project needs", false);
-        return;
-    }
-
-    // Send investment to server
-    $.ajax({
-        url: './ajax/process_cash_investment.php',
-        method: 'POST',
-        data: {
-            project_id: currentProject.id,
-            investment_amount: investmentAmount
-        },
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                showNotification("Cash investment successful!", true);
-                // Close the modal and refresh project details
-                const cashInvestmentModalInstance = bootstrap.Modal.getInstance(document.getElementById('cashInvestmentModal'));
-                cashInvestmentModalInstance.hide();
+  <div class="seal">
+            <svg class="seal-inner" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- Outer circle -->
+                <circle cx="100" cy="100" r="90" fill="none" stroke="#daa520" stroke-width="2"/>
+                <circle cx="100" cy="100" r="85" fill="none" stroke="#1a365d" stroke-width="1"/>
                 
-                // Optionally reload the page or update project details
-                location.reload();
-            } else {
-                showNotification(response.message || "Investment failed", false);
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error("Error processing investment:", error);
-            showNotification("Failed to process investment", false);
-        }
-    });
-}
+                <!-- Inner decorative elements -->
+                <path d="M100 15 A85 85 0 0 1 100 185 A85 85 0 0 1 100 15" fill="none" stroke="#daa520" stroke-width="1"/>
+                <path d="M15 100 A85 85 0 0 1 185 100 A85 85 0 0 1 15 100" fill="none" stroke="#daa520" stroke-width="1"/>
+                
+                <!-- Center text -->
+                <text x="100" y="85" text-anchor="middle" font-family="Cormorant Garamond" font-size="24" fill="#1a365d">COBUILD</text>
+                <text x="100" y="115" text-anchor="middle" font-family="Montserrat" font-size="12" fill="#1a365d">OFFICIAL SEAL</text>
+                
+                <!-- Decorative stars -->
+                <path d="M100 30 L102 25 L100 20 L98 25 Z" fill="#daa520"/>
+                <path d="M100 170 L102 175 L100 180 L98 175 Z" fill="#daa520"/>
+                <path d="M30 100 L25 102 L20 100 L25 98 Z" fill="#daa520"/>
+                <path d="M170 100 L175 102 L180 100 L175 98 Z" fill="#daa520"/>
+            </svg>
+        </div>
 
-function processSkillInvestment() {
-    const selectedSkills = $('input[name="skills[]"]:checked').map(function() {
-        return this.value;
-    }).get();
-    const currentProject = window.currentSelectedProject;
+        <?php
+// process_investment_intention.php
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+use Dompdf\Dompdf;
 
-    if (selectedSkills.length === 0) {
-        showNotification("Please select at least one skill", false);
-        return;
-    }
+include '../../../../database/db.php';
+require '../PHPMailer/src/PHPMailer.php';
+require '../PHPMailer/src/Exception.php';
+require '../PHPMailer/src/SMTP.php';
+require '../../../../vendor/autoload.php';
 
-    $.ajax({
-        url: './ajax/process_skill_investment.php',
-        method: 'POST',
-        data: {
-            project_id: currentProject.id,
-            skill_ids: selectedSkills
-        },
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                showNotification("Skill investment successful!", true);
-                const skillInvestmentModalInstance = bootstrap.Modal.getInstance(document.getElementById('skillInvestmentModal'));
-                skillInvestmentModalInstance.hide();
-                location.reload();
-            } else {
-                showNotification(response.message || "Skill investment failed", false);
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error("Error processing skill investment:", error);
-            showNotification("Failed to process skill investment", false);
-        }
-    });
-}
-
-function processServiceInvestment() {
-    const selectedServices = $('input[name="services[]"]:checked').map(function() {
-        return this.value;
-    }).get();
-    const currentProject = window.currentSelectedProject;
-
-    if (selectedServices.length === 0) {
-        showNotification("Please select at least one service", false);
-        return;
-    }
-
-    $.ajax({
-        url: './ajax/process_service_investment.php',
-        method: 'POST',
-        data: {
-            project_id: currentProject.id,
-            service_ids: selectedServices
-        },
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                showNotification("Service investment successful!", true);
-                const serviceInvestmentModalInstance = bootstrap.Modal.getInstance(document.getElementById('serviceInvestmentModal'));
-                serviceInvestmentModalInstance.hide();
-                location.reload();
-            } else {
-                showNotification(response.message || "Service investment failed", false);
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error("Error processing service investment:", error);
-            showNotification("Failed to process service investment", false);
-        }
-    });
-}
-
-// Modify the existing showProjectDetails function to store the current project
-function showProjectDetails(project) {
-    // Store the current project globally for investment process
-    window.currentSelectedProject = project;
-
-    // Rest of the existing showProjectDetails function...
-    // ... (keep the existing implementation)
-}
-
-
-
-
-<?php
-include '../config.php';
 session_start();
 
-if (!isset($_POST['project_id'])) {
-    echo json_encode([]);
+if (!isset($_SESSION['user_id'])) {
+    echo json_encode(['success' => false, 'message' => 'User not logged in']);
     exit;
 }
 
-$project_id = $_POST['project_id'];
-
-$stmt = $conn->prepare("SELECT 
-    id,
-    skill_name,
-    skill_category
-    FROM skills 
-    WHERE id NOT IN (
-        SELECT skill_id 
-        FROM project_skills 
-        WHERE project_id = ?
-    )");
-$stmt->bind_param("i", $project_id);
+// Verify user is an investor
+$stmt = $conn->prepare("SELECT user_type, name, email FROM users WHERE id = ?");
+$stmt->bind_param("i", $_SESSION['user_id']);
 $stmt->execute();
 $result = $stmt->get_result();
-$skills = $result->fetch_all(MYSQLI_ASSOC);
+$user = $result->fetch_assoc();
 
-echo json_encode($skills);
-?>
-
-
-
-
-<?php
-include '../config.php';
-session_start();
-
-if (!isset($_POST['project_id'])) {
-    echo json_encode([]);
+if ($user['user_type'] !== 'investor') {
+    echo json_encode(['success' => false, 'message' => 'Only investors can make investment intentions']);
     exit;
 }
 
-$project_id = $_POST['project_id'];
+// Validate input
+if (!isset($_POST['project_id']) || !isset($_POST['investment_type'])) {
+    echo json_encode(['success' => false, 'message' => 'Invalid input']);
+    exit;
+}
 
-$stmt = $conn->prepare("SELECT 
-    id,
-    service_name,
-    service_category
-    FROM services 
-    WHERE id NOT IN (
-        SELECT service_id 
-        FROM project_services 
-        WHERE project_id = ?
-    )");
-$stmt->bind_param("i", $project_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$services = $result->fetch_all(MYSQLI_ASSOC);
+$user_id = $_SESSION['user_id'];
+$project_id = intval($_POST['project_id']);
+$investment_type = $_POST['investment_type'];
+$investment_details = $_POST['investment_details'] ?? null;
+$amount = $_POST['amount'] ?? null;
+$hours = $_POST['hours'] ?? null;
 
-echo json_encode($services);
+// Generate certificate number
+$certificate_number = 'CB-' . date('Y') . '-' . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+$created_date = date('Y-m-d H:i:s');
+
+$conn->begin_transaction();
+
+try {
+    // Get project information
+    $stmt = $conn->prepare("
+        SELECT 
+            p.title as project_name,
+            p.description as project_description,
+            u.email as developer_email,
+            GROUP_CONCAT(DISTINCT ps.skill_type) as skills,
+            GROUP_CONCAT(DISTINCT pserv.service_type) as services
+        FROM projects p 
+        JOIN users u ON p.builder_id = u.id 
+        LEFT JOIN project_skills ps ON p.id = ps.project_id
+        LEFT JOIN project_services pserv ON p.id = pserv.project_id
+        WHERE p.id = ? AND u.user_type = 'developer'
+        GROUP BY p.id
+    ");
+    $stmt->bind_param("i", $project_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $project = $result->fetch_assoc();
+
+    if (!$project) {
+        throw new Exception('Project not found or the associated user is not a developer');
+    }
+
+    // Insert investment intention
+    $stmt = $conn->prepare("
+        INSERT INTO investment_intentions (
+            user_id, 
+            project_id, 
+            investment_type, 
+            amount,
+            hours,
+            status,
+            certificate_number,
+            created_at
+        ) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)
+    ");
+
+    $stmt->bind_param("iisdiss", 
+        $user_id, 
+        $project_id, 
+        $investment_type, 
+        $amount, 
+        $hours,
+        $certificate_number,
+        $created_date
+    );
+    $stmt->execute();
+
+    // Format investment details for certificate
+    $formatted_investment_details = "";
+    if ($investment_type === 'financial') {
+        $formatted_investment_details = "Financial Investment: $" . number_format($amount, 2);
+    } elseif ($investment_type === 'skills') {
+        $formatted_investment_details = "Time Investment: " . $hours . " hours";
+    }
+
+    // Format skills and services for certificate
+    $skills_services_text = "";
+    if (!empty($project['skills'])) {
+        $skills_services_text .= $project['skills'];
+    }
+    if (!empty($project['services'])) {
+        if (!empty($skills_services_text)) {
+            $skills_services_text .= ", ";
+        }
+        $skills_services_text .= $project['services'];
+    }
+
+    // Prepare email content for developer
+    $developerEmailContent = "
+        <h2>New Investment Intention</h2>
+        <p><strong>Project Name:</strong> {$project['project_name']}</p>
+        <p><strong>Investor Name:</strong> {$user['name']}</p>
+        <p><strong>Investment Type:</strong> {$investment_type}</p>
+        <p><strong>Certificate Number:</strong> {$certificate_number}</p>
+        
+        <h3>Project Skills/Services</h3>
+        <p>{$skills_services_text}</p>
+        
+        <p><strong>Investment Details:</strong> {$formatted_investment_details}</p>
+    ";
+
+    // Generate Certificate
+    $certificate_path = __DIR__ . "/../../../../certificates/investment_certificate_" . time() . ".pdf";
+    
+    // Create PDF using DOMPDF
+    $dompdf = new Dompdf();
+    $options = $dompdf->getOptions();
+    $options->set('isHtml5ParserEnabled', true);
+    $options->set('isCssFloatEnabled', true);
+    $dompdf->setOptions($options);
+
+    // Get certificate template
+    $certificate_html = file_get_contents('../../../Certificates/certificate_of_investment.php');
+    
+    // Replace placeholders
+    $certificate_html = str_replace(
+        [
+            '{{INVESTOR_NAME}}', 
+            '{{PROJECT_NAME}}', 
+            '{{SKILLS_SERVICES}}',
+            '{{INVESTMENT_DETAILS}}', 
+            '{{DATE}}',
+            '{{CERTIFICATE_ID}}'
+        ],
+        [
+            $user['name'], 
+            $project['project_name'], 
+            $skills_services_text,
+            $formatted_investment_details,
+            date('F d, Y', strtotime($created_date)),
+            $certificate_number
+        ],
+        $certificate_html
+    );
+
+    $dompdf->loadHtml($certificate_html);
+    $dompdf->setPaper('A4', 'landscape');
+    $dompdf->render();
+    
+    file_put_contents($certificate_path, $dompdf->output());
+
+    // Send notification to developer
+    if (!empty($project['developer_email'])) {
+        send_notification_email(
+            $project['developer_email'], 
+            'New Investment Intention', 
+            $developerEmailContent
+        );
+    }
+
+    // Send certificate to investor
+    send_notification_email(
+        $user['email'], 
+        'Certificate of Investment Intention', 
+        "Thank you for your investment intention in {$project['project_name']}. Your certificate number is {$certificate_number}. Please find your certificate attached.",
+        $certificate_path
+    );
+
+    $conn->commit();
+    echo json_encode([
+        'success' => true, 
+        'message' => 'Investment intention submitted successfully',
+        'certificate_number' => $certificate_number
+    ]);
+} catch (Exception $e) {
+    $conn->rollback();
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+}
+
+function send_notification_email($to, $subject, $message, $attachment = null) {
+    $mail = new PHPMailer(true);
+
+    try {
+        // Server settings
+        $mail->isSMTP();
+        $mail->Host       = 'smtp.gmail.com';
+        $mail->SMTPAuth   = true;
+        $mail->Username   = 'Officialcobuild@gmail.com';
+        $mail->Password   = 'udodjurhumdfrsim';
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port       = 587;
+
+        // Recipients
+        $mail->setFrom('Officialcobuild@gmail.com', 'Cobuild');
+        $mail->addAddress($to);
+
+        // Attachments
+        if ($attachment) {
+            $mail->addAttachment($attachment);
+        }
+
+        // Content
+        $mail->isHTML(true);
+        $mail->Subject = $subject;
+        $mail->Body    = $message;
+
+        $mail->send();
+    } catch (Exception $e) {
+        throw new Exception("Email could not be sent. Mailer Error: {$mail->ErrorInfo}");
+    }
+}
 ?>

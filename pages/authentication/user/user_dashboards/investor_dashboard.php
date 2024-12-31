@@ -1142,26 +1142,20 @@ investmentTypeModalInstance.show();
 
 }
 
-
 function showInvestmentModal(type) {
-    
     // Close the investment type modal
     const investmentTypeModalInstance = bootstrap.Modal.getInstance(document.getElementById('investmentTypeModal'));
     investmentTypeModalInstance.hide();
 
-    // Current selected project (assuming it's stored globally or passed correctly)
+    // Check if a project is selected
     const currentProject = window.currentSelectedProject;
-       // Add null/undefined check
-       if (!window.currentSelectedProject) {
+    if (!currentProject) {
         console.error("No project selected");
         showNotification("Please select a project first", false);
         return;
     }
 
-    // Rest of the existing function...
-   // const currentProject = window.currentSelectedProject;
-
-    // Add more robust checks
+    // Check for project details
     if (!currentProject.total_project_cost) {
         console.error("Project details incomplete", currentProject);
         showNotification("Project details are incomplete", false);
@@ -1175,72 +1169,54 @@ function showInvestmentModal(type) {
 
         const cashInvestmentModalInstance = new bootstrap.Modal(document.getElementById('cashInvestmentModal'));
         cashInvestmentModalInstance.show();
-    } else if (type === 'skill') {
-        // Fetch and populate available skills
+    } else {
+        // Determine URL and container based on type
+        let url, containerId;
+        if (type === 'skill') {
+            url = './ajax/get_available_skills.php';
+            containerId = '#availableSkillsContainer';
+        } else if (type === 'service') {
+            url = './ajax/get_available_services.php';
+            containerId = '#availableServicesContainer';
+        } else {
+            console.error("Invalid investment type");
+            return;
+        }
+
+        // Fetch and populate available skills/services
         $.ajax({
-            url: './ajax/get_available_skills.php',
+            url: url,
             method: 'POST',
             data: { project_id: currentProject.id },
             dataType: 'json',
-            success: function(skills) {
-                let skillsHTML = '';
-                skills.forEach(skill => {
-                    skillsHTML += `
+            success: function(data) {
+                let itemsHTML = '';
+                data.forEach(item => {
+                    itemsHTML += `
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" 
-                                   name="skills[]" 
-                                   value="${skill.id}" 
-                                   id="skill_${skill.id}">
-                            <label class="form-check-label" for="skill_${skill.id}">
-                                ${skill.skill_type} (${skill.total_hours} hours) 
+                                   name="${type}s[]" 
+                                   value="${item.id}" 
+                                   id="${type}_${item.id}">
+                            <label class="form-check-label" for="${type}_${item.id}">
+                                ${item[type + '_type']} (${item.total_hours} hours)
                             </label>
                         </div>
                     `;
                 });
-                $('#availableSkillsContainer').html(skillsHTML);
+                $(containerId).html(itemsHTML);
 
-                const skillInvestmentModalInstance = new bootstrap.Modal(document.getElementById('skillInvestmentModal'));
-                skillInvestmentModalInstance.show();
+                const investmentModalInstance = new bootstrap.Modal(document.getElementById(`${type}InvestmentModal`));
+                investmentModalInstance.show();
             },
             error: function(xhr, status, error) {
-                console.error("Error fetching skills:", error);
-                showNotification("Failed to load available skills", false);
-            }
-        });
-    } else if (type === 'service') {
-        // Fetch and populate available services
-        $.ajax({
-            url: './ajax/get_available_services.php',
-            method: 'POST',
-            data: { project_id: currentProject.id },
-            dataType: 'json',
-            success: function(services) {
-                let servicesHTML = '';
-                services.forEach(service => {
-                    servicesHTML += `
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" 
-                                   name="services[]" 
-                                   value="${service.id}" 
-                                   id="service_${service.id}">
-                            <label class="form-check-label" for="service_${service.id}">
-                                ${service.service_type} (${service.total_hours} hours)
-                            </label>
-                        </div>
-                    `;
-                });
-                $('#availableServicesContainer').html(servicesHTML);
-
-                const serviceInvestmentModalInstance = new bootstrap.Modal(document.getElementById('serviceInvestmentModal'));
-                serviceInvestmentModalInstance.show();
-            },
-            error: function(xhr, status, error) {
-                console.error("Error fetching services:", error);
-                showNotification("Failed to load available services", false);
+                console.error(`Error fetching ${type}s:`, error);
+                showNotification(`Failed to load available ${type}s`, false);
             }
         });
     }
 }
+
 
 // Add this function to check user type
 function getUserType() {
@@ -1261,11 +1237,10 @@ function getUserType() {
 // Modify the investment processing functions
 function processCashInvestment() {
     getUserType().then(userType => {
-        if (userType !== 'investor') {
+        if (userType == 'investor') {
             showNotification("Only investors can make investments", false);
             return;
         }
-
         const investmentAmount = parseFloat($('#investmentAmount').val());
         const remainingInvestment = parseFloat($('#remainingInvestment').val());
         const currentProject = window.currentSelectedProject;
