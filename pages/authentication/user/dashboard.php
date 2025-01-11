@@ -155,6 +155,8 @@ ob_end_flush();
             </div>
         </div>
     </div>
+   
+
 
     <footer>
         <p>
@@ -185,11 +187,11 @@ ob_end_flush();
         // Determine what to display based on the investment_type field
         let displayText;
         if (message.investment_type === 'cash') {
-            displayText = `Investment Amount: $${message.amount}`;
+            displayText = `Investment Amount: NGN ${message.amount}`;
         } else if (message.investment_type === 'service') {
             displayText = `Service: ${message.description}`; // Assuming there's a 'description' field for services
         } else if (message.investment_type === 'skill') {
-            displayText = `Skills : ${message.description}`; // Assuming there's a 'description' field for skills
+            displayText = `Skills: ${message.description}`; // Assuming there's a 'description' field for skills
         } else {
             displayText = 'Unknown investment type';
         }
@@ -198,6 +200,7 @@ ob_end_flush();
             <strong>${message.project_name}</strong><br>
             ${displayText}<br>
             <button class="btn btn-success btn-sm" onclick="approveInvestment(${message.id})">Approve</button>
+            <button class="btn btn-danger btn-sm" onclick="rejectInvestment(${message.id})">Reject</button>
         `;
         messagesList.appendChild(listItem);
     });
@@ -206,27 +209,100 @@ ob_end_flush();
 }
 
 
+
         populateMessages();
 
         function approveInvestment(investmentId) {
-            // Implement AJAX call to approve the investment intention
-            fetch('approve_investment.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ id: investmentId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Investment intention approved!');
-                    populateMessages(); // Refresh messages after approval
-                } else {
-                    alert('Error approving investment intention: ' + data.message);
-                }
-            });
+    fetch('./ajax/approval_investment.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: investmentId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Create a success message
+            const message = document.createElement('div');
+            message.textContent = "Investment intention approved!";
+            message.style.color = "green"; // Success color
+            document.body.appendChild(message);
+            setTimeout(() => {
+                message.remove(); // Remove message after 3 seconds
+            }, 1000);
+            setTimeout(() => {
+                location.reload(); // Refresh the page after approval
+            }, 1000); // Wait for the message to display
+        } else {
+            // Create an error message
+            const message = document.createElement('div');
+            message.textContent = "Error approving investment intention: " + data.message;
+            message.style.color = "red"; // Error color
+            document.body.appendChild(message);
+            setTimeout(() => {
+                message.remove(); // Remove message after 3 seconds
+            }, 1000);
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        const message = document.createElement('div');
+        message.textContent = "An error occurred. Please try again.";
+        message.style.color = "red"; // Error color
+        document.body.appendChild(message);
+        setTimeout(() => {
+            message.remove(); // Remove message after 3 seconds
+        }, 1000);
+    });
+}
+
+
+        function rejectInvestment(investmentId) {
+    if (confirm("Are you sure you want to reject this investment intention?")) {
+        fetch('./ajax/reject_investment.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: investmentId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const message = document.createElement('div');
+                message.textContent = "Investment intention rejected successfully.";
+                message.style.color = "green"; // Success color
+                document.body.appendChild(message);
+                setTimeout(() => {
+                    message.remove(); // Remove message after 3 seconds
+                }, 1000);
+                setTimeout(() => {
+                    location.reload(); // Refresh the page after rejection
+                }, 1000); // Wait for the message to display
+            } else {
+                const message = document.createElement('div');
+                message.textContent = "Error: " + data.message;
+                message.style.color = "red"; // Error color
+                document.body.appendChild(message);
+                setTimeout(() => {
+                    message.remove(); // Remove message after 3 seconds
+                }, 1000);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const message = document.createElement('div');
+            message.textContent = "An error occurred. Please try again.";
+            message.style.color = "red"; // Error color
+            document.body.appendChild(message);
+            setTimeout(() => {
+                message.remove(); // Remove message after 3 seconds
+            }, 1000);
+        });
+    }
+}
+
     </script>
 
     <?php
@@ -249,3 +325,4 @@ ob_end_flush();
 
 </body>
 </html>
+

@@ -50,13 +50,13 @@
             align-items: center;
             justify-content: center;
             color:  #1a365d;
-            font-size: 30px;
+            font-size: 20px;
             font-weight: bold;
         }
 
         .title {
             color: #1a365d;
-            font-size: 35px;
+            font-size: 15px;
             margin: 0;
             font-family: 'Cormorant Garamond', serif;
             text-transform: uppercase;
@@ -65,7 +65,7 @@
 
         .subtitle {
             color: #666;
-            font-size: 14px;
+            font-size: 9px;
             margin: 10px 0;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -78,7 +78,7 @@
 
         .recipient-name {
             color: #1a365d;
-            font-size: 24px;
+            font-size: 14px;
             font-family: 'Cormorant Garamond', serif;
             border-bottom: 2px solid #daa520;
             display: inline-block;
@@ -215,33 +215,24 @@
             <div class="detail-label">Project Name</div>
             <div class="detail-value">{{PROJECT_NAME}}</div>
         </div>
-        <div class="detail-item">
+        <!-- <div class="detail-item">
             <div class="detail-label">Investment Type</div>
             <div class="detail-value">{{INVESTMENT_TYPE}}</div>
-        </div>
+        </div> -->
         <div class="detail-item">
             <div class="detail-label">Investment Amount</div>
-            <div class="detail-value">${{INVESTMENT_AMOUNT}}</div>
+            <div class="detail-value">NGN {{INVESTMENT_AMOUNT}}</div>
         </div>
-        <!-- Uncomment if needed -->
-        <!-- <div class="detail-item">
-            <div class="detail-label">Skills/Services</div>
-            <div class="detail-value">{{SKILLS_SERVICES}}</div>
-        </div> -->
-        <!-- <div class="detail-item">
-            <div class="detail-label">Additional Details</div>
-            <div class="detail-value">{{INVESTMENT_DETAILS}}</div>
-        </div> -->
+        <div class="detail-item">
+            <div class="detail-label">Total Hours</div>
+            <div class="detail-value">{{TOTAL_HOURS}} Hours</div>
+        </div>
     </div>
 
-    <div class="signatures" style="display:flex; justify-content:space-between;">
-        <div class="signature">
-            <div class="signature-name">Segun Oke</div>
-            <div class="signature-title">Trustee</div>
-        </div>
-        <div class="signature">
-            <div class="signature-name">Adenike Akanji</div>
-            <div class="signature-title">Trustee / Secretary</div>
+    <div class="investment-details">
+        <div class="investment-details-title">{{INVESTMENT_TYPE_LABEL}} Details</div>
+        <div class="investment-details-grid">
+            {{DETAILED_ITEMS}}
         </div>
     </div>
 

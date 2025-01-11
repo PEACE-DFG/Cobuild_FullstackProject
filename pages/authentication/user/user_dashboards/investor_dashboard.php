@@ -1284,7 +1284,6 @@ function processCashInvestment() {
 }
 
 // Add get_user_type.php file
-
 function processSkillInvestment() {
     const selectedSkills = $('input[name="skills[]"]:checked').map(function() {
         return this.value;
@@ -1302,7 +1301,8 @@ function processSkillInvestment() {
         data: {
             project_id: currentProject.id,
             investment_type: 'skill',
-            investment_details: JSON.stringify(selectedSkills)
+            investment_details: JSON.stringify(selectedSkills),
+            selected_skills: selectedSkills  // Add this line to pass selected skill IDs
         },
         dataType: 'json',
         success: function(response) {
@@ -1338,7 +1338,8 @@ function processServiceInvestment() {
         data: {
             project_id: currentProject.id,
             investment_type: 'service',
-            investment_details: JSON.stringify(selectedServices)
+            investment_details: JSON.stringify(selectedServices),
+            selected_services: selectedServices  // Add this line to pass selected service IDs
         },
         dataType: 'json',
         success: function(response) {
@@ -1356,6 +1357,5 @@ function processServiceInvestment() {
         }
     });
 }
-
 
 </script>

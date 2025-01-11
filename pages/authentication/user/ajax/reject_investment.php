@@ -21,22 +21,17 @@ $conn->begin_transaction();
 
 try {
     // Get investment details
-    $stmt = $conn->prepare("SELECT user_id, amount, project_id FROM investment_intentions WHERE id = ?");
+    $stmt = $conn->prepare("SELECT user_id FROM investment_intentions WHERE id = ?");
     $stmt->bind_param("i", $investment_id);
     $stmt->execute();
-    $stmt->bind_result($user_id, $amount, $project_id);
+    $stmt->bind_result($user_id);
     $stmt->fetch();
     $stmt->close();
 
-    // Update investment intention status to approved
-    $stmt = $conn->prepare("UPDATE investment_intentions SET status = 'accepted' WHERE id = ?");
+    // Update investment intention status to rejected
+    $stmt = $conn->prepare("UPDATE investment_intentions SET status = 'rejected' WHERE id = ?");
     $stmt->bind_param("i", $investment_id);
     $stmt->execute();
-
-    // Deduct the investment amount from the project's investment goal
-    $update_stmt = $conn->prepare("UPDATE projects SET investment_goal = investment_goal - ? WHERE id = ?");
-    $update_stmt->bind_param("di", $amount, $project_id);
-    $update_stmt->execute();
 
     // Get investor email
     $stmt = $conn->prepare("SELECT email FROM users WHERE id = ?");
@@ -46,7 +41,7 @@ try {
     $stmt->fetch();
     $stmt->close();
 
-    // Send approval notification email
+    // Send rejection notification email
     $mail = new PHPMailer(true);
     
     // Email settings
@@ -64,8 +59,8 @@ try {
 
     // Content
     $mail->isHTML(true);
-    $mail->Subject = 'Investment Intention Approved';
-    $mail->Body    = "Your investment intention of NGN " . number_format($amount, 2) . " has been approved.";
+    $mail->Subject = 'Investment Intention Rejected';
+    $mail->Body    = "Your investment intention has been rejected. Please contact support for more details.";
 
     $mail->send();
 
