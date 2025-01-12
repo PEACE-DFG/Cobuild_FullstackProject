@@ -30,7 +30,21 @@ $errors = [];
 
 // Fetch investment intentions for the logged-in developer
 $developer_id = $_SESSION['user_id'];
-$stmt = $conn->prepare("SELECT ii.*, p.title AS project_name FROM investment_intentions ii JOIN projects p ON ii.project_id = p.id WHERE p.builder_id = ? AND ii.status = 'pending'");
+$stmt = $conn->prepare("
+    SELECT 
+        ii.*,
+        p.title AS project_name,
+        ii.investment_type,
+        ii.investment_details,
+        ii.status,
+        ii.created_at
+    FROM investment_intentions ii 
+    JOIN projects p ON ii.project_id = p.id 
+    WHERE p.builder_id = ? 
+    AND ii.status = 'pending'
+    ORDER BY ii.created_at DESC
+");
+
 $stmt->bind_param("i", $developer_id);
 $stmt->execute();
 $intentions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -173,40 +187,59 @@ ob_end_flush();
         const messages = <?php echo json_encode($intentions); ?>;
         const messagesList = document.getElementById('messagesList');
         const messageCount = document.getElementById('messageCount');
-
         function populateMessages() {
     messagesList.innerHTML = '';
     let count = 0;
 
     messages.forEach(message => {
-        console.log(message); // Debugging line
         count++;
         const listItem = document.createElement('li');
         listItem.className = 'dropdown-item';
 
-        // Determine what to display based on the investment_type field
-        let displayText;
-        if (message.investment_type === 'cash') {
-            displayText = `Investment Amount: NGN ${message.amount}`;
-        } else if (message.investment_type === 'service') {
-            displayText = `Service: ${message.description}`; // Assuming there's a 'description' field for services
-        } else if (message.investment_type === 'skill') {
-            displayText = `Skills: ${message.description}`; // Assuming there's a 'description' field for skills
-        } else {
-            displayText = 'Unknown investment type';
+        let displayText = '';
+
+        switch (message.investment_type) {
+            case 'cash':
+                displayText = `Investment Amount: NGN ${message.amount}`;
+                break;
+
+            case 'service':
+                // Parse and format service details
+                const services = JSON.parse(message.investment_details || '[]');
+                displayText = services.map(service => 
+                    `<span class="service-item"><strong>${service.name}</strong>: ${service.hours} hours</span>`
+                ).join('<br>');
+                break;
+
+            case 'skill':
+                // Parse and format skill details
+                const skills = JSON.parse(message.investment_details || '[]');
+                displayText = skills.map(skill => 
+                    `<span class="skill-item"><strong>${skill.name}</strong>: ${skill.hours} hours</span>`
+                ).join('<br>');
+                break;
+
+            default:
+                displayText = 'No details provided';
         }
 
         listItem.innerHTML = `
-            <strong>${message.project_name}</strong><br>
-            ${displayText}<br>
-            <button class="btn btn-success btn-sm" onclick="approveInvestment(${message.id})">Approve</button>
-            <button class="btn btn-danger btn-sm" onclick="rejectInvestment(${message.id})">Reject</button>
+            <div class="message-item">
+                <strong>Project: ${message.project_name}</strong><br>
+                <span class="investment-type">Type: ${message.investment_type.charAt(0).toUpperCase() + message.investment_type.slice(1)}</span><br>
+                <span class="investment-details">${displayText}</span><br>
+                <div class="action-buttons mt-2">
+                    <button class="btn btn-success btn-sm" onclick="approveInvestment(${message.id})">Approve</button>
+                    <button class="btn btn-danger btn-sm" onclick="rejectInvestment(${message.id})">Reject</button>
+                </div>
+            </div>
         `;
         messagesList.appendChild(listItem);
     });
 
-    messageCount.textContent = count; // Update message count
+    messageCount.textContent = count;
 }
+
 
 
 
