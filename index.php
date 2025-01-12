@@ -227,6 +227,81 @@ if (isset($_SESSION['user_id'])) {
   width: 100%;
   height: 100%;
 }
+.container-custom {
+              max-width: 1200px; /* Max width for the container */
+              margin: auto;
+          }
+          .header-title {
+              text-align: center;
+              color: #007bff; /* Blue */
+              margin-bottom: 20px;
+          }
+          .flex-row {
+              display: flex;
+              flex-wrap: wrap;
+              justify-content: space-between;
+          }
+          .card-custom {
+              background: rgba(255, 255, 255, 0.9); /* White with transparency */
+              border: none;
+              border-radius: 15px;
+              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+              margin: 10px;
+              flex: 1 1 calc(33% - 20px); /* 3 cards per row */
+              display: flex;
+              flex-direction: column;
+              transition: transform 0.3s, box-shadow 0.3s;
+          }
+          .card-custom:hover {
+              transform: translateY(-5px);
+              box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+          }
+          .image-top {
+              height: 200px; /* Fixed height for images */
+              object-fit: cover; /* Cover the area without distortion */
+              border-top-left-radius: 15px;
+              border-top-right-radius: 15px;
+          }
+          .body-content {
+              padding: 15px;
+              flex-grow: 1;
+          }
+          .title-project {
+              font-size: 1.5rem;
+              color: #007bff; /* Blue */
+              margin: 0;
+          }
+          .desc-project {
+              color: #6c757d; /* Grey */
+              margin: 10px 0;
+          }
+          .icon-custom {
+              color: #28a745; /* Green */
+              margin-right: 5px;
+          }
+          .status-project, .location-project, .revenue-project {
+              font-weight: bold;
+              color: #dc3545; /* Red */
+              margin: 5px 0;
+          }
+          .footer-custom {
+              padding: 10px 0;
+              text-align: center;
+              color: #6c757d; /* Grey */
+          }
+					.btn-invest {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #28a745; /* Green background */
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.btn-invest:hover {
+    background-color: #218838; /* Darker green on hover */
+}
 
 	</style>
 
@@ -511,52 +586,58 @@ if (isset($_SESSION['user_id'])) {
 		<div class="container">
 			<div class="row row-pb-md">
 				<div class="col-md-8 col-md-offset-2 heading animate-box" data-animate-effect="fadeIn">
-					<h1>Featured Investment Projects</h1>
-					<!-- <p class="sub">Dignissimos asperiores vitae velit veniam totam fuga molestias accusamus alias autem provident. Odit ab aliquam dolor eius.</p> -->
-					<p class="subtle-text animate-box" data-animate-effect="fadeIn">Featured  <span>Projects</span></p>
+				<h1>Available Projects</h1>
+				<!-- <p class="sub">Dignissimos asperiores vitae velit veniam totam fuga molestias accusamus alias autem provident. Odit ab aliquam dolor eius.</p> -->
+					<!-- <p style="z-index:-1;" class="subtle-text animate-box" data-animate-effect="fadeIn">Available  <span>Projects</span></p> -->
 				</div>
 			</div>
 			<div class="row ">
-				<div class="col-lg-4 ">
-					<div class="gtco-practice-area-item animate-box">
-						<div class="card" style="width: 35rem;box-shadow:5px 5px 3px grey;border-radius:25px;margin: auto;">
-							<img src="images/project.jpg" class="card-img-top img-fluid " style="max-width: 350px; border-radius:10px;" alt="...">
-							<div class="card-body text-center pt-2">
-								<h3 class="card-title" style="padding-top:10px">Investment Raised: N200,000,000</h3>
-								<h4 class="card-text" style="padding-bottom:30px;color:rgb(5, 5, 158)">Project Tittle: Oluwanimi Resort</h4>
-								<!-- <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p> -->
-							</div>
-						</div>
-					</div>
+			<div class="container-custom">
+			<div class="flex-row">
+    <?php
+    // Assume you have a session started and a variable to check if the user is logged in
+    $isLoggedIn = isset($_SESSION['user_id']); // Check if user is logged in
 
-				</div>
-				<div class="col-lg-4">
-					<div class="gtco-practice-area-item animate-box">
-						<div class="card" style="width: 35rem;box-shadow:5px 5px 3px grey;border-radius:25px;margin: auto;">
-							<img src="images/project.jpg" class="card-img-top img-fluid " style="max-width: 350px;border-radius:10px;" alt="...">
-							<div class="card-body text-center pt-2">
-								<h3 class="card-title" style="padding-top:10px">Investment Raised: N200,000,000</h3>
-								<h4 class="card-text" style="padding-bottom:30px;color:rgb(5, 5, 158)">Project Tittle: Oluwanimi Resort</h4>
-								<!-- <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p> -->
-							</div>
-						</div>
-					</div>
+    // Include the database configuration file
+    include 'database/db.php';
 
-				</div>
-				<div class="col-lg-4" style="margin: auto;">
-					<div class="gtco-practice-area-item animate-box ">
-						<div class="card" style="width: 35rem;box-shadow:5px 5px 3px grey;border-radius:25px;margin: auto;	">
-							<img src="images/project.jpg" class="card-img-top img-fluid " style="max-width: 350px;border-radius:10px;" alt="...">
-							<div class="card-body text-center pt-2">
-								<h3 class="card-title" style="padding-top:10px">Investment Raised: N200,000,000</h3>
-								<h4 class="card-text" style="padding-bottom:30px;color:rgb(5, 5, 158)">Project Tittle: Oluwanimi Resort</h4>
-								<!-- <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p> -->
-							</div>
-						</div>
-					</div>
+    // Query to fetch projects including featured_image
+    $sql = "SELECT title, description, location, status, created_at, total_project_cost, developer_info, investment_types, featured_image FROM projects";
+    $result = $conn->query($sql);
 
-				</div>
-			</div>
+    // Check if there are results
+    if ($result->num_rows > 0) {
+        // Output data for each row
+        while ($row = $result->fetch_assoc()) {
+            echo '<div class="card-custom">';
+            echo '<img src="' . htmlspecialchars($row["featured_image"]) . '" class="image-top" alt="Project Image">';
+            echo '<div class="body-content">';
+            echo '<h5 class="title-project"> <span style="font-weight:900;"> Project Title:</span> '  . htmlspecialchars($row["title"]) . '</h5>';
+            echo '<p class="desc-project"> <span style="font-weight:900;"> Project Description:</span> ' . htmlspecialchars($row["description"]) . '</p>';
+            echo '<p class="location-project"><i class="fa-solid fa-location-dot"></i>  Location: ' . htmlspecialchars($row["location"]) . '</p>';
+            echo '<p class="status-project"><i class="fa-solid fa-signal"></i>  Status: ' . htmlspecialchars($row["status"]) . '</p>';
+            echo '<p class="revenue-project">Projected Revenue: <i class="fa-solid fa-naira-sign"></i> ' . htmlspecialchars($row["total_project_cost"]) . '</p>';
+            echo '<p>Developer Info: ' . htmlspecialchars($row["developer_info"]) . '</p>';
+
+            // Button logic
+            if ($isLoggedIn) {
+                echo '<a href="pages/authentication/user/dashboard.php" class="btn-invest">Invest Now</a>'; // Redirect to dashboard
+            } else {
+                echo '<a href="pages/authentication/user/register.php" class="btn-invest">Invest Now</a>'; // Redirect to registration
+            }
+
+            echo '</div>';
+            echo '</div>';
+        }
+    } else {
+        echo '<p>No projects available.</p>';
+    }
+
+    // Close connection
+    $conn->close();
+    ?>
+</div>
+
 		</div>
 	</section>
 
@@ -836,6 +917,8 @@ if (isset($_SESSION['user_id'])) {
 	<!-- Magnific Popup -->
 	<script src="js/jquery.magnific-popup.min.js"></script>
 	<script src="js/magnific-popup-options.js"></script>
+
+	
 	<!-- Main -->
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

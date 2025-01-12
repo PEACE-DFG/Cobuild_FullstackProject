@@ -239,10 +239,6 @@ ob_end_flush();
 
     messageCount.textContent = count;
 }
-
-
-
-
         populateMessages();
 
         function approveInvestment(investmentId) {
