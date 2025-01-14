@@ -723,7 +723,6 @@ ob_end_flush();
                         <tr>
                             <th>Project Title</th>
                             <th>Status</th>
-                            <th>Verification Status</th>
                             <th>Location</th>
                             <th>Investments</th>
                             <th>Actions</th>
@@ -734,7 +733,6 @@ ob_end_flush();
                         <tr>
                             <td><?php echo htmlspecialchars($project['title']); ?></td>
                             <td><?php echo ucfirst($project['status']); ?></td>
-                            <td><?php echo ucfirst($project['verification_status']); ?></td>
                             <td><?php echo htmlspecialchars($project['location']); ?></td>
                             <td><?php echo $project['investment_count']; ?></td>
                             <td>
