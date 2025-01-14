@@ -561,7 +561,7 @@ try {
     // Fetch verified projects
     $stmt = $conn->prepare("
         SELECT COUNT(*) FROM projects 
-        WHERE builder_id = ? AND verification_status = 'verified'
+        WHERE builder_id = ? AND status = 'verified'
     ");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
@@ -633,6 +633,85 @@ try {
 $paystackPublicKey = $PAYSTACK_CONFIG['public_key'];
 ob_end_flush();
 ?>
+
+<style>
+        .tooltip-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .tooltip-content {
+            background: white;
+            border-left: 4px solid #3498db;
+            border-radius: 4px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            width: 300px;
+            overflow: hidden;
+        }
+
+        .tooltip-header {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tooltip-header i {
+            color: #3498db;
+        }
+
+        .tooltip-header span {
+            flex-grow: 1;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #666;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .tooltip-body {
+            padding: 15px;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Developer Dashboard</h2>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newProjectModal">
@@ -642,7 +721,7 @@ ob_end_flush();
 
 <!-- Widgets Section -->
 <div class="row mt-4">
-    <div class="col-md-3 mb-4">
+    <div class="col-md-6 mb-4">
         <div class="card">
             <div class="card-body text-center">
                 <h4>Total Projects</h4>
@@ -650,15 +729,15 @@ ob_end_flush();
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-4">
+    <!-- <div class="col-md-3 mb-4">
         <div class="card">
             <div class="card-body text-center">
                 <h4>Live Projects</h4>
                 <p class="display-4"><?php echo $live_projects; ?></p>
             </div>
         </div>
-    </div>
-    <div class="col-md-3 mb-4">
+    </div> -->
+    <div class="col-md-6 mb-4">
         <div class="card">
             <div class="card-body text-center">
                 <h4>Verified Projects</h4>
@@ -666,14 +745,14 @@ ob_end_flush();
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-4">
+    <!-- <div class="col-md-3 mb-4">
         <div class="card">
             <div class="card-body text-center">
                 <h4>Featured Projects</h4>
                 <p class="display-4"><?php echo $featured_projects; ?></p>
             </div>
         </div>
-    </div>
+    </div> -->
 </div>
 <!-- information -->
  <marquee behavior="" direction="">
@@ -695,17 +774,46 @@ ob_end_flush();
         </div>
     </div>
     <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Investment Types</h5>
-                <?php if (empty($investment_types)): ?>
-                    <div class="alert alert-info">No investment data available</div>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">My Projects by Category</h5>
+            <?php
+            $user_id = $_SESSION['user_id'] ?? null;
+
+            if ($user_id === null) {
+                echo '<div class="alert alert-warning">Please log in to view your projects</div>';
+            } else {
+                // Modified query to only show projects for the logged-in builder
+                $query = "SELECT pc.category_name, COUNT(p.id) as project_count 
+                         FROM projects p 
+                         JOIN project_categories pc ON p.project_category = pc.id 
+                         WHERE p.builder_id = ? 
+                         GROUP BY pc.id, pc.category_name 
+                         ORDER BY project_count DESC";
+                
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param("i", $user_id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                $project_categories = array();
+                
+                if ($result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                        $project_categories[] = $row;
+                    }
+                }
+
+                if (empty($project_categories)): ?>
+                    <div class="alert alert-info">You haven't created any projects yet</div>
                 <?php else: ?>
-                    <canvas id="investmentTypesChart"></canvas>
-                <?php endif; ?>
-            </div>
+                    <canvas id="projectCategoriesChart"></canvas>
+                <?php endif;
+            }
+            ?>
         </div>
     </div>
+</div>
 </div>
 
 <!-- Recent Projects Table -->
@@ -724,7 +832,7 @@ ob_end_flush();
                             <th>Project Title</th>
                             <th>Status</th>
                             <th>Location</th>
-                            <th>Investments</th>
+                            <!-- <th>Investments</th> -->
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -734,7 +842,6 @@ ob_end_flush();
                             <td><?php echo htmlspecialchars($project['title']); ?></td>
                             <td><?php echo ucfirst($project['status']); ?></td>
                             <td><?php echo htmlspecialchars($project['location']); ?></td>
-                            <td><?php echo $project['investment_count']; ?></td>
                             <td>
                                 <button class="btn btn-primary btn-sm" onclick="editProject(<?php echo $project['id']; ?>)">Edit</button>
                                 <button class="btn btn-success btn-sm" onclick="verifyProject(<?php echo $project['id']; ?>)">Verify</button>
@@ -1104,6 +1211,20 @@ ob_end_flush();
                 </div>
             </div>
         </div>
+        <!-- Add this right after your body tag -->
+<div id="verificationTooltip" class="tooltip-container" style="display: none;">
+    <div class="tooltip-content">
+        <div class="tooltip-header">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Important Reminder</span>
+            <button onclick="stopTooltip()" class="close-btn">&times;</button>
+        </div>
+        <div class="tooltip-body">
+            Please ensure your project is properly verified before approving any intentions.
+            This helps maintain quality and trust in our platform.
+        </div>
+    </div>
+</div>
 
 
 <?php if (isset($_SESSION['success_message'])): ?>

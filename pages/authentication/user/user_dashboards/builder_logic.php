@@ -801,4 +801,101 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    <?php if (!empty($project_categories)): ?>
+    var ctx = document.getElementById('projectCategoriesChart').getContext('2d');
+    
+    // Prepare data for the chart
+    var categories = <?php echo json_encode(array_column($project_categories, 'category_name')); ?>;
+    var counts = <?php echo json_encode(array_column($project_categories, 'project_count')); ?>;
+    
+    // Create the chart
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: categories,
+            datasets: [{
+                label: 'Number of Projects',
+                data: counts,
+                backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                title: {
+                    display: false
+                }
+            }
+        }
+    });
+    <?php endif; ?>
+});
+
+  // Store the interval ID to clear it later
+  let tooltipInterval;
+        let isStopped = false;
+
+        // Function to show the tooltip
+        function showTooltip() {
+            if (!isStopped) {
+                const tooltip = document.getElementById('verificationTooltip');
+                tooltip.style.display = 'block';
+                
+                // Auto-hide after 8 seconds
+                setTimeout(() => {
+                    if (!isStopped) {
+                        hideTooltip();
+                    }
+                }, 8000);
+            }
+        }
+
+        // Function to hide the tooltip
+        function hideTooltip() {
+            const tooltip = document.getElementById('verificationTooltip');
+            tooltip.style.animation = 'slideOut 0.5s ease-out';
+            setTimeout(() => {
+                tooltip.style.display = 'none';
+                tooltip.style.animation = 'slideIn 0.5s ease-out';
+            }, 500);
+        }
+
+        // Function to stop the tooltip permanently until next login
+        function stopTooltip() {
+            isStopped = true;
+            hideTooltip();
+            clearInterval(tooltipInterval);
+            // Store in session that user has dismissed the tooltip
+            fetch('set_tooltip_preference.php', {
+                method: 'POST',
+                body: JSON.stringify({ stopped: true }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+        }
+
+        // Start showing tooltip every 2 minutes
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show initially after 1 second
+            setTimeout(showTooltip, 1000);
+            
+            // Then show every 2 minutes
+            tooltipInterval = setInterval(showTooltip, 120000);
+        });
 </script>
