@@ -51,7 +51,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $conn->close();
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -185,7 +184,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <!-- Login Form -->
     <div class="login-container">
-        <img src="../../../images/Cobuild_logo.png" alt="">
+        <img src="../../../images/Cobuild_logo.png" class="image-fluid" style="width:100%" alt="">
         <h2>Admin Login</h2>
         <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="POST">
             <div class="mb-3">

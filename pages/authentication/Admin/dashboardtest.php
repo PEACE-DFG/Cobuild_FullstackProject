@@ -3,19 +3,19 @@ session_start();
 ob_start();
 require '../../../database/db.php';
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
+// // Check if user is logged in
+// if (!isset($_SESSION['user_id'])) {
+//     header("Location: login.php");
+//     exit();
+// }
 
-// Fetch user information
-$user_id = $_SESSION['user_id'];
-$stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$user = $result->fetch_assoc();
+// // Fetch user information
+// $user_id = $_SESSION['user_id'];
+// $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
+// $stmt->bind_param("i", $user_id);
+// $stmt->execute();
+// $result = $stmt->get_result();
+// $user = $result->fetch_assoc();
 
 // Dashboard statistics queries
 $stats = [];
@@ -33,12 +33,12 @@ $stats['active_projects'] = $result->fetch_assoc()['total_projects'];
 // Get total investments amount
 $investmentQuery = "SELECT COALESCE(SUM(amount), 0) as total_investments 
                    FROM investment_intentions 
-                   WHERE status = 'approved' AND investment_type = 'cash'";
+                   WHERE  investment_type = 'cash'";
 $result = $conn->query($investmentQuery);
 $stats['total_investments'] = $result->fetch_assoc()['total_investments'];
 
 // Get certificates count
-$certQuery = "SELECT COUNT(*) as total_certificates FROM investment_certificates";
+$certQuery = "SELECT COUNT(*) as total_certificates FROM investment_intentions";
 $result = $conn->query($certQuery);
 $stats['total_certificates'] = $result->fetch_assoc()['total_certificates'];
 
@@ -53,13 +53,35 @@ $projectsQuery = "SELECT p.*, u.name as builder_name
                  ORDER BY p.created_at DESC";
 $projects = $conn->query($projectsQuery)->fetch_all(MYSQLI_ASSOC);
 
-// Fetch investments list
-$investmentsQuery = "SELECT ii.*, p.title as project_name, u.name as investor_name 
-                    FROM investment_intentions ii 
-                    JOIN projects p ON ii.project_id = p.id 
-                    JOIN users u ON ii.id = u.id 
-                    ORDER BY ii.created_at DESC";
+// Fetch investments list with investor name
+$investmentsQuery = "
+    SELECT 
+        ii.id, 
+        ii.user_id, 
+        ii.project_id, 
+        ii.investment_type, 
+        ii.investment_details, 
+        ii.amount, 
+        ii.status, 
+        ii.certificate_number, 
+        ii.created_at, 
+        ii.responded_at, 
+        ii.hours, 
+        p.title as project_name, 
+        u.name as investor_name 
+    FROM 
+        investment_intentions ii
+    JOIN 
+        projects p ON ii.project_id = p.id
+    JOIN 
+        users u ON ii.user_id = u.id
+    ORDER BY 
+        ii.created_at DESC
+";
+
+// Execute query and fetch results
 $investments = $conn->query($investmentsQuery)->fetch_all(MYSQLI_ASSOC);
+
 
 // Handle AJAX requests
 if (isset($_POST['action'])) {
@@ -96,6 +118,8 @@ if (isset($_POST['action'])) {
     }
 }
 
+
+
 // Add this to your existing PHP section at the top of the file
 if (isset($_POST['action']) && $_POST['action'] === 'verify_project') {
     header('Content-Type: application/json');
@@ -111,13 +135,6 @@ if (isset($_POST['action']) && $_POST['action'] === 'verify_project') {
     exit;
 }
 
-
-?>
-
-<?php
-// Include the external database connection file
-require_once '../../../database/db.php'; // Update the path to your actual connection file
-
 // Function to execute a query and handle errors
 function executeQuery($conn, $query) {
     $result = $conn->query($query);
@@ -126,6 +143,36 @@ function executeQuery($conn, $query) {
         return []; // Return an empty array on failure
     }
     return $result->fetch_all(MYSQLI_ASSOC); // Fetch all results as an associative array
+}
+// Fetch investment certificates along with related project and investor data
+$certificatesQuery = "
+    SELECT 
+        ii.certificate_number as certificate_id, 
+        p.title as project_name, 
+        u.name as investor_name, 
+        ii.created_at as issue_date
+    FROM 
+        investment_intentions ii
+    JOIN 
+        projects p ON ii.project_id = p.id
+    JOIN 
+        users u ON ii.user_id = u.id
+    WHERE 
+        ii.status = 'accepted'  -- Filter for accepted investments (certificates)
+    ORDER BY 
+        ii.created_at DESC
+";
+
+// Execute the query and fetch the results
+$certificates = $conn->query($certificatesQuery);
+
+// Check if there are any results
+if ($certificates->num_rows > 0) {
+    // Fetch all results
+    $certificates = $certificates->fetch_all(MYSQLI_ASSOC);
+} else {
+    // If no certificates are found, return an empty array or handle it accordingly
+    $certificates = [];
 }
 
 // Fetch monthly investments
@@ -161,6 +208,7 @@ $userTypes = executeQuery($conn, "
     GROUP BY user_type
 ");
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -393,6 +441,9 @@ $userTypes = executeQuery($conn, "
     padding: 0.25rem 2rem 0.25rem 0.5rem;
 }
     </style>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 <body>
 
@@ -420,7 +471,7 @@ $userTypes = executeQuery($conn, "
     </li>
     <li class="nav-item">
         <a class="nav-link" data-bs-toggle="tab" href="#investments">
-            <i class="fas fa-chart-line"></i> Investments
+            <i class="fas fa-chart-line"></i> Investments Intentions
         </a>
     </li>
     <li class="nav-item">
@@ -428,6 +479,13 @@ $userTypes = executeQuery($conn, "
             <i class="fas fa-certificate"></i> Certificates
         </a>
     </li>
+    <li class="nav-item">
+                <form action="logout.php" method="POST" class="d-inline">
+                    <button type="submit" name="logout" id="logoutButton" class="nav-link btn btn-link text-white">
+                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                    </button>
+                </form>
+            </li>
 </ul>
 </nav>
 
@@ -440,8 +498,8 @@ $userTypes = executeQuery($conn, "
         <button class="btn btn-link" id="sidebarToggle">
             <i class="fas fa-bars"></i>
         </button>
-        <!-- <div class="d-flex align-items-center">
-            <div class="dropdown me-3">
+        <div class="d-flex align-items-center">
+            <!-- <div class="dropdown me-3">
                 <button class="btn btn-link position-relative" id="notificationsDropdown" data-bs-toggle="dropdown">
                     <i class="fas fa-bell"></i>
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -453,12 +511,12 @@ $userTypes = executeQuery($conn, "
                     <a class="dropdown-item" href="#">New investment</a>
                     <a class="dropdown-item" href="#">New project created</a>
                 </div>
-            </div>
+            </div> -->
             <div class="dropdown">
                 <button class="btn btn-link d-flex align-items-center" id="userDropdown" data-bs-toggle="dropdown">
-                    <img src="<?php echo htmlspecialchars($user['profile_image'] ?? 'passport.jpg'); ?>" 
+                    <img src="<?php echo htmlspecialchars($user['profile_image'] ?? 'https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png'); ?>" 
                          class="rounded-circle me-2" 
-                         width="32" 
+                         width="52" 
                          height="32" 
                          alt="User">
                     <span><?php echo htmlspecialchars($user['name'] ?? 'Admin'); ?></span>
@@ -467,10 +525,9 @@ $userTypes = executeQuery($conn, "
                     <a class="dropdown-item" href="#profile">Profile</a>
                     <a class="dropdown-item" href="#settings">Settings</a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="logout.php">Logout</a>
                 </div>
             </div>
-        </div> -->
+        </div>
     </div>
 </nav>
 
@@ -497,7 +554,7 @@ $userTypes = executeQuery($conn, "
                         <div class="dashboard-card p-4">
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <h6 class="text-success fw-bold">ACTIVE PROJECTS</h6>
+                                    <h6 class="text-success fw-bold">TOTAL PROJECTS</h6>
                                     <h4 class="mb-0"><?php echo number_format($stats['active_projects']); ?></h4>
                                 </div>
                                 <i class="fas fa-project-diagram card-icon text-success"></i>
@@ -505,7 +562,7 @@ $userTypes = executeQuery($conn, "
                         </div>
                     </div>
                     <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="dashboard-card p-4">
+                        <div class="dashboard-card px-3 py-4">
                             <div class="d-flex justify-content-between">
                                 <div>
                                     <h6 class="text-info fw-bold">TOTAL INVESTMENTS</h6>
@@ -516,10 +573,10 @@ $userTypes = executeQuery($conn, "
                         </div>
                     </div>
                     <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="dashboard-card p-4">
+                        <div class="dashboard-card px-1 py-4">
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <h6 class="text-warning fw-bold">CERTIFICATES</h6>
+                                    <h6 class="text-warning fw-bold">CERTIFICATES INTENTION</h6>
                                     <h4 class="mb-0"><?php echo number_format($stats['total_certificates']); ?></h4>
                                 </div>
                                 <i class="fas fa-certificate card-icon text-warning"></i>
@@ -651,16 +708,7 @@ $userTypes = executeQuery($conn, "
                                             <i class="fas fa-check"></i>
                                         </button>
                                     <?php endif; ?>
-                                    <!-- <button class="btn btn-sm btn-primary edit-project" 
-                                            data-id="<?php echo $project['id']; ?>"
-                                            title="Edit Project">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger delete-project" 
-                                            data-id="<?php echo $project['id']; ?>"
-                                            title="Delete Project">
-                                        <i class="fas fa-trash"></i>
-                                    </button> -->
+                                    
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -719,12 +767,20 @@ $userTypes = executeQuery($conn, "
                                     <th>Project</th>
                                     <th>Investor</th>
                                     <th>Issue Date</th>
-                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Certificate data will be loaded dynamically -->
-                            </tbody>
+    <?php foreach ($certificates as $certificate): ?>
+        <tr>
+            <td><?php echo htmlspecialchars($certificate['certificate_id']); ?></td>
+            <td><?php echo htmlspecialchars($certificate['project_name']); ?></td>
+            <td><?php echo htmlspecialchars($certificate['investor_name']); ?></td>
+            <td><?php echo date('M d, Y', strtotime($certificate['issue_date'])); ?></td>
+          
+        </tr>
+    <?php endforeach; ?>
+</tbody>
+
                         </table>
                     </div>
                 </div>
@@ -736,13 +792,16 @@ $userTypes = executeQuery($conn, "
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<!-- <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script> -->
+<script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+
 <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
 <!-- Improved JavaScript Implementation -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
 <script>
+    
 $(document).ready(function() {
     // Initialize DataTables
     $('#usersTable, #projectsTable, #investmentsTable, #certificatesTable').DataTable();
@@ -1015,6 +1074,40 @@ $(document).ready(function() {
                 }
             }
         });
+
+  document.getElementById('logoutButton').addEventListener('click', function(event) {
+  event.preventDefault(); // Prevent the default link behavior
+
+  // Display a confirmation dialog using SweetAlert
+  Swal.fire({
+      title: 'Are you sure?',
+      text: "You will be logged out!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, log me out!'
+  }).then((result) => {
+      if (result.isConfirmed) {
+          // Create a form to send POST request to logout.php
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = 'logout.php';
+
+          // Create a hidden input to signal logout confirmation
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = 'confirm_logout';
+          input.value = 'yes';
+
+          form.appendChild(input);
+          document.body.appendChild(form);
+
+          // Submit the form, logging out the user
+          form.submit();
+      }
+  });
+});
 </script>
 
 </body>

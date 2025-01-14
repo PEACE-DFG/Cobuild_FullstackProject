@@ -616,7 +616,7 @@ if (isset($_SESSION['user_id'])) {
             echo '<p class="desc-project"> <span style="font-weight:900;"> Project Description:</span> ' . htmlspecialchars($row["description"]) . '</p>';
             echo '<p class="location-project"><i class="fa-solid fa-location-dot"></i>  Location: ' . htmlspecialchars($row["location"]) . '</p>';
             echo '<p class="status-project"><i class="fa-solid fa-signal"></i>  Status: ' . htmlspecialchars($row["status"]) . '</p>';
-            echo '<p class="revenue-project">Projected Revenue: <i class="fa-solid fa-naira-sign"></i> ' . htmlspecialchars($row["total_project_cost"]) . '</p>';
+            echo '<p class="revenue-project">Project Cost: <i class="fa-solid fa-naira-sign"></i> ' . htmlspecialchars($row["total_project_cost"]) . '</p>';
             echo '<p>Developer Info: ' . htmlspecialchars($row["developer_info"]) . '</p>';
 
             // Button logic
