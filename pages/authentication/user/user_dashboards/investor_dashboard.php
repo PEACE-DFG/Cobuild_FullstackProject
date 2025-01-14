@@ -6,12 +6,14 @@ if (!defined('MAIN_DASHBOARD')) {
 
 // Fetch investor-specific data
 $stmt = $conn->prepare("SELECT 
-    COUNT(*) as total_investments,
-    SUM(CASE WHEN investment_type = 'cash' THEN investment_value ELSE 0 END) as total_cash_invested,
-    COUNT(DISTINCT project_id) as total_projects,
-    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_investments
-    FROM investments 
-    WHERE investor_id = ?");
+    COUNT(*) AS total_investments,
+        COALESCE(SUM(CASE WHEN investment_type = 'cash' AND status = 'accepted' THEN amount ELSE 0 END), 0) AS total_cash_invested,
+        COUNT(DISTINCT project_id) AS total_projects,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed_investments
+    FROM 
+        investment_intentions
+    WHERE 
+        user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -120,6 +122,42 @@ $stmt->bind_param("i", $project_id);
 $stmt->execute();
 $project_skills = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
+
+// Query to fetch recent investments with status 'accepted'
+$query = "
+    SELECT 
+        i.project_id, 
+        p.title, 
+        i.investment_type, 
+        i.amount AS investment_value, 
+        i.status, 
+        i.created_at, 
+        i.certificate_number, 
+        i.hours, 
+        i.investment_details
+    FROM 
+        investment_intentions i
+    JOIN 
+        projects p ON i.project_id = p.id
+    WHERE 
+        i.status = 'accepted'
+    ORDER BY 
+        i.created_at DESC
+";
+
+// Execute the query
+$result = $conn->query($query);
+
+// Check if any rows are returned
+if ($result->num_rows > 0) {
+    // Store the results in an array
+    $recent_investments = [];
+    while ($row = $result->fetch_assoc()) {
+        $recent_investments[] = $row;
+    }
+} else {
+    $recent_investments = [];
+}
 ?>
 
 <style>
@@ -383,38 +421,39 @@ $project_skills = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 <!-- Widgets Section -->
 <div class="row mt-4">
-    <div class="col-md-3 mb-4">
+    <div class="col-md-4 mb-4">
         <div class="card">
             <div class="card-body text-center">
                 <h4>Total Investments</h4>
-                <p class="display-4"><?php echo $investment_stats['total_investments']; ?></p>
+                <p class="display-5"><?php echo $investment_stats['total_investments']; ?></p>
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-4">
+    <div class="col-md-4 mb-4">
         <div class="card">
             <div class="card-body text-center">
                 <h4>Total Cash Invested</h4>
-                <p class="display-4">$<?php echo number_format($investment_stats['total_cash_invested'], 2); ?></p>
+                <p class="display-5">₦<?php echo number_format($investment_stats['total_cash_invested'], 2); ?></p>
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-4">
+    <div class="col-md-4 mb-4">
         <div class="card">
             <div class="card-body text-center">
                 <h4>Projects Involved</h4>
-                <p class="display-4"><?php echo $investment_stats['total_projects']; ?></p>
+                <p class="display-5"><?php echo $investment_stats['total_projects']; ?></p>
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-4">
+
+    <!-- <div class="col-md-3 mb-4">
         <div class="card">
             <div class="card-body text-center">
                 <h4>Labor Hours</h4>
                 <p class="display-4"><?php echo number_format($labor_stats['total_labor_hours'], 1); ?></p>
             </div>
         </div>
-    </div>
+    </div> -->
 </div>
 
 <!-- Charts Section -->
@@ -452,7 +491,6 @@ $project_skills = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                     <th>Description</th>
                         <th>Date Added</th>
                         <th>Verification Status</th>
-                        <th>Current Investment Amount</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -463,8 +501,7 @@ $project_skills = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         <td><?php echo htmlspecialchars($project['title']); ?></td>
         <td><?php echo htmlspecialchars($project['description']); ?></td>
         <td><?php echo date('M d, Y', strtotime($project['created_at'])); ?></td>
-        <td><?php echo ucfirst(htmlspecialchars($project['verification_status'])); ?></td>
-        <td><?php echo htmlspecialchars($project['current_investment_amount']); ?></td>
+        <td><?php echo ucfirst(htmlspecialchars($project['status'])); ?></td>
         <td><button class="btn btn-success">Details</button></td>
     </tr>
     <?php endforeach; ?>
@@ -693,10 +730,9 @@ function savePreferences() {
 </script>
 
     <!-- Recent Investments Table -->
-
-<div class="card mt-4">
+    <div class="card mt-4">
     <div class="card-body">
-        <h5 class="card-title">Recent Investments</h5>
+        <h5 class="card-title">Recent Accepted Investments</h5>
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -707,100 +743,188 @@ function savePreferences() {
                         <th>Status</th>
                         <th>Date</th>
                         <th>Certificate</th>
+                        <th>Details</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($recent_investments as $investment): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($investment['project_title']); ?></td>
-                        <td><?php echo ucfirst(htmlspecialchars($investment['investment_type'])); ?></td>
-                        <td>
-                            <?php 
-                            if ($investment['investment_type'] == 'cash') {
-                                echo '$' . number_format($investment['investment_value'], 2);
-                            } else if ($investment['investment_type'] == 'labor') {
-                                echo number_format($investment['investment_value'], 1) . ' hours';
-                            } else {
-                                echo number_format($investment['investment_value']) . ' units';
-                            }
-                            ?>
-                        </td>
-                        <td><?php echo ucfirst(htmlspecialchars($investment['status'])); ?></td>
-                        <td><?php echo date('M d, Y', strtotime($investment['created_at'])); ?></td>
-                        <td>
-                            <?php if ($investment['certificate_url']): ?>
-                                <a href="<?php echo htmlspecialchars($investment['certificate_url']); ?>" target="_blank">View</a>
-                            <?php else: ?>
-                                N/A
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
+                    <?php if (!empty($recent_investments)): ?>
+                        <?php foreach ($recent_investments as $investment): ?>
+                            <tr>
+                                <!-- Project Title -->
+                                <td><?php echo htmlspecialchars($investment['title']); ?></td>
+                                
+                                <!-- Investment Type -->
+                                <td><?php echo ucfirst(htmlspecialchars($investment['investment_type'])); ?></td>
+                                
+                                <!-- Investment Value -->
+                                <td>
+                                    <?php 
+                                    if ($investment['investment_type'] == 'cash') {
+                                        echo '₦' . number_format($investment['investment_value'], 2);
+                                    } elseif ($investment['investment_type'] == 'skill' || $investment['investment_type'] == 'service') {
+                                        echo number_format($investment['investment_value'], 1) . ' hours';
+                                    } else {
+                                        echo 'N/A';
+                                    }
+                                    ?>
+                                </td>
+                                
+                                <!-- Status -->
+                                <td>
+                                    <span class="badge bg-success">
+                                        <?php echo ucfirst(htmlspecialchars($investment['status'])); ?>
+                                    </span>
+                                </td>
+                                
+                                <!-- Date -->
+                                <td><?php echo date('M d, Y', strtotime($investment['created_at'])); ?></td>
+                                
+                                <!-- Certificate -->
+                                <td>
+                                    <?php if (!empty($investment['certificate_number'])): ?>
+                                        <span><?php echo htmlspecialchars($investment['certificate_number']); ?></span>
+                                    <?php else: ?>
+                                        <span class="text-muted">N/A</span>
+                                    <?php endif; ?>
+                                </td>
+                                
+                                <!-- Investment Details -->
+                                <td>
+                                    <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#investmentDetailsModal<?php echo $investment['project_id']; ?>">View Details</button>
+                                </td>
+                            </tr>
+
+                            <!-- Modal for Viewing Investment Details -->
+                            <div class="modal fade" id="investmentDetailsModal<?php echo $investment['project_id']; ?>" tabindex="-1" aria-labelledby="investmentDetailsLabel<?php echo $investment['project_id']; ?>" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="investmentDetailsLabel<?php echo $investment['project_id']; ?>">Investment Details for <?php echo htmlspecialchars($investment['title']); ?></h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p><strong>Investment Type:</strong> <?php echo ucfirst(htmlspecialchars($investment['investment_type'])); ?></p>
+                                            <p><strong>Investment Amount:</strong> 
+                                                <?php 
+                                                if ($investment['investment_type'] == 'cash') {
+                                                    echo '$' . number_format($investment['investment_value'], 2);
+                                                } elseif ($investment['investment_type'] == 'skill' || $investment['investment_type'] == 'service') {
+                                                    echo number_format($investment['investment_value'], 1) . ' hours';
+                                                } else {
+                                                    echo 'N/A';
+                                                }
+                                                ?>
+                                            </p>
+                                            <p><strong>Investment Details:</strong> <?php echo nl2br(htmlspecialchars($investment['investment_details'])); ?></p>
+                                            <?php if (!empty($investment['certificate_number'])): ?>
+                                                <p><strong>Certificate Number:</strong> <?php echo htmlspecialchars($investment['certificate_number']); ?></p>
+                                            <?php else: ?>
+                                                <p><strong>Certificate:</strong> Not Available</p>
+                                            <?php endif; ?>
+                                            <p><strong>Date of Investment:</strong> <?php echo date('M d, Y', strtotime($investment['created_at'])); ?></p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No accepted investments found.</td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
+
 <script>
 // Investment Distribution Chart
 const distributionCtx = document.getElementById('investmentDistributionChart').getContext('2d');
 new Chart(distributionCtx, {
-    type: 'pie',
+    type: 'bar',
     data: {
-        labels: <?php echo json_encode(array_column($investment_types, 'investment_type')); ?>,
+        labels: [
+            'Total Projects Involved',
+            'Total Investments',
+            'Total Cash Invested'
+        ],
         datasets: [{
-            data: <?php echo json_encode(array_column($investment_types, 'total_value')); ?>,
+            data: [
+                <?php echo json_encode($investment_stats['total_projects'], JSON_NUMERIC_CHECK); ?>, 
+                <?php echo json_encode($investment_stats['total_investments'], JSON_NUMERIC_CHECK); ?>, 
+                <?php echo json_encode($investment_stats['total_cash_invested'], JSON_NUMERIC_CHECK); ?>
+            ],
             backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
             hoverBackgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
         }]
     },
     options: {
         responsive: true,
-        legend: {
-            position: 'bottom',
-        },
-        title: {
-            display: true,
-            text: 'Investment Type Distribution'
-        }
-    }
-});
-
-// Monthly Trends Chart
-const trendsCtx = document.getElementById('monthlyTrendsChart').getContext('2d');
-new Chart(trendsCtx, {
-    type: 'line',
-    data: {
-        labels: <?php echo json_encode(array_map(function($item) {
-            return date('M Y', strtotime($item['month'] . '-01'));
-        }, array_reverse($monthly_trends))); ?>,
-        datasets: [{
-            label: 'Cash Investments ($)',
-            data: <?php echo json_encode(array_column(array_reverse($monthly_trends), 'cash_value')); ?>,
-            borderColor: '#FF6384',
-            fill: false
-        }, {
-            label: 'Labor Investments',
-            data: <?php echo json_encode(array_column(array_reverse($monthly_trends), 'labor_count')); ?>,
-            borderColor: '#36A2EB',
-            fill: false
-        }, {
-            label: 'Material Investments',
-            data: <?php echo json_encode(array_column(array_reverse($monthly_trends), 'materials_count')); ?>,
-            borderColor: '#FFCE56',
-            fill: false
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true
+        plugins: {
+            legend: {
+                position: 'bottom',
+            },
+            title: {
+                display: true,
+                text: 'Investment Type Distribution'
             }
         }
     }
 });
+
+
+// Monthly Trends Chart
+const trendsCtx = document.getElementById('monthlyTrendsChart').getContext('2d');
+new Chart(trendsCtx, {
+    type: 'line', // Changed to bar chart
+    data: {
+        labels: ['Total Projects', 'Total Investments', 'Total Cash Invested'], // Labels for the categories
+        datasets: [{
+            label: 'Investment Statistics',
+            data: [
+                <?php echo json_encode($investment_stats['total_projects'], JSON_NUMERIC_CHECK); ?>,
+                <?php echo json_encode($investment_stats['total_investments'], JSON_NUMERIC_CHECK); ?>,
+                <?php echo json_encode($investment_stats['total_cash_invested'], JSON_NUMERIC_CHECK); ?>
+            ], // Data values
+            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'], // Colors for each bar
+            hoverBackgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'], // Hover colors
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false, // No legend since we have only one dataset
+            },
+            title: {
+                display: true,
+                text: 'Investment Summary'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Value'
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Investment Metrics'
+                }
+            }
+        }
+    }
+});
+
 
 
 function showProjectDetails(project) {
@@ -1044,14 +1168,27 @@ function verifyProject() {
                 <div class="modal-body">
                     <div class="d-grid gap-2">
                         <button class="btn btn-primary btn-lg" onclick="showInvestmentModal('cash')">Cash Investment</button>
-                        <button class="btn btn-success btn-lg" onclick="showInvestmentModal('skill')">Skill Investment</button>
-                        <button class="btn btn-info btn-lg" onclick="showInvestmentModal('service')">Service Investment</button>
+
+                        
+
+
+
+
+
                     </div>
                 </div>
             </div>
         </div>
     </div>
     `;
+
+    // Removed this buttons first
+    // to be added back after the cash investment button
+    // ##########################################################################################################################################
+    // <button class="btn btn-success btn-lg" onclick="showInvestmentModal('skill')">Skill Investment</button>
+    //                     <button class="btn btn-info btn-lg" onclick="showInvestmentModal('service')">Service Investment</button>
+
+    // #####################################################################################################################################
 
         // Create and show the cash investment modal
         const cashInvestmentModal = `
