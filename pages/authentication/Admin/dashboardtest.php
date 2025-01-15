@@ -668,7 +668,7 @@ $userTypes = executeQuery($conn, "
             </div>
         </div>
 
-    <!-- Update the Projects Tab table structure -->
+  <!-- Update the Projects Tab table structure -->
 <div class="tab-pane fade" id="projects">
     <div class="container-fluid">
         <div class="dashboard-card p-4">
@@ -683,6 +683,7 @@ $userTypes = executeQuery($conn, "
                             <th>Status</th>
                             <th>Created</th>
                             <th>Verify Now</th>
+                            <th>Delete</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -708,7 +709,14 @@ $userTypes = executeQuery($conn, "
                                             <i class="fas fa-check"></i>
                                         </button>
                                     <?php endif; ?>
-                                    
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger delete-project" 
+                                            data-id="<?php echo $project['id']; ?>"
+                                            data-title="<?php echo htmlspecialchars($project['title']); ?>"
+                                            title="Delete Project">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -718,6 +726,27 @@ $userTypes = executeQuery($conn, "
         </div>
     </div>
 </div>
+
+<!-- Add this modal for delete confirmation -->
+<div class="modal fade" id="deleteProjectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the project "<span id="projectTitle"></span>"?
+                This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
         <!-- Investments Tab -->
         <div class="tab-pane fade" id="investments">
@@ -1108,7 +1137,95 @@ $(document).ready(function() {
       }
   });
 });
-</script>
 
+
+
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let deleteProjectId = null;
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteProjectModal'));
+
+    // Handle delete button clicks
+    document.querySelectorAll('.delete-project').forEach(button => {
+        button.addEventListener('click', function() {
+            const projectId = this.dataset.id;
+            const projectTitle = this.dataset.title;
+            deleteProjectId = projectId;
+            
+            // Update modal content
+            document.getElementById('projectTitle').textContent = projectTitle;
+            deleteModal.show();
+        });
+    });
+
+    // Handle confirm delete
+    document.getElementById('confirmDelete').addEventListener('click', function() {
+        if (deleteProjectId) {
+            // Show loading state
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...';
+            this.disabled = true;
+
+            // Create FormData
+            const formData = new FormData();
+            formData.append('project_id', deleteProjectId);
+
+            // Send delete request
+            fetch('actions/delete_project.php', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin' // Important for session handling
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove the row from the table
+                    const row = document.querySelector(`button[data-id="${deleteProjectId}"]`).closest('tr');
+                    row.remove();
+                    
+                    // Show success message
+                    showAlert('Project deleted successfully', 'success');
+                } else {
+                    // Show error message
+                    showAlert(data.message || 'Failed to delete project', 'danger');
+                }
+            })
+            .catch(error => {
+                showAlert('Error deleting project. Please try again.', 'danger');
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                // Reset button state
+                const confirmButton = document.getElementById('confirmDelete');
+                confirmButton.innerHTML = 'Delete';
+                confirmButton.disabled = false;
+                
+                // Hide modal
+                deleteModal.hide();
+                deleteProjectId = null;
+            });
+        }
+    });
+
+    // Utility function to show alerts
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        const container = document.querySelector('.dashboard-card');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+});
+</script>
 </body>
 </html>
