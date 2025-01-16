@@ -65,7 +65,6 @@ $investmentsQuery = "
         ii.status, 
         ii.certificate_number, 
         ii.created_at, 
-        ii.responded_at, 
         ii.hours, 
         p.title as project_name, 
         u.name as investor_name 
