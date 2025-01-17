@@ -122,8 +122,6 @@ $stmt->bind_param("i", $project_id);
 $stmt->execute();
 $project_skills = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-
-// Query to fetch recent investments with status 'accepted'
 $query = "
     SELECT 
         i.project_id, 
@@ -140,10 +138,11 @@ $query = "
     JOIN 
         projects p ON i.project_id = p.id
     WHERE 
-        i.status = 'accepted'
+        i.status IN ('accepted', 'rejected')
     ORDER BY 
         i.created_at DESC
 ";
+
 
 // Execute the query
 $result = $conn->query($query);
@@ -1168,6 +1167,8 @@ function verifyProject() {
                 <div class="modal-body">
                     <div class="d-grid gap-2">
                         <button class="btn btn-primary btn-lg" onclick="showInvestmentModal('cash')">Cash Investment</button>
+                        <button class="btn btn-success btn-lg" onclick="showInvestmentModal('skill')">Skill Investment</button>
+                        <button class="btn btn-info btn-lg" onclick="showInvestmentModal('service')">Service Investment</button>
 
                         
 
@@ -1185,8 +1186,8 @@ function verifyProject() {
     // Removed this buttons first
     // to be added back after the cash investment button
     // ##########################################################################################################################################
-    // <button class="btn btn-success btn-lg" onclick="showInvestmentModal('skill')">Skill Investment</button>
-    //                     <button class="btn btn-info btn-lg" onclick="showInvestmentModal('service')">Service Investment</button>
+   // <button class="btn btn-success btn-lg" onclick="showInvestmentModal('skill')">Skill Investment</button>
+     //               <button class="btn btn-info btn-lg" onclick="showInvestmentModal('service')">Service Investment</button>
 
     // #####################################################################################################################################
 

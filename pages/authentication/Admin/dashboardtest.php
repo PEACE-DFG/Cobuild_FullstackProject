@@ -760,7 +760,9 @@ $userTypes = executeQuery($conn, "
                                     <th>Project</th>
                                     <th>Investor</th>
                                     <th>Amount</th>
+                                    <th>Investment Type</th>
                                     <th>Status</th>
+                                    <th>Investment Details</th>
                                     <th>Date</th>
                                 </tr>
                             </thead>
@@ -771,7 +773,22 @@ $userTypes = executeQuery($conn, "
                                         <td><?php echo htmlspecialchars($investment['project_name']); ?></td>
                                         <td><?php echo htmlspecialchars($investment['investor_name']); ?></td>
                                         <td>₦<?php echo number_format($investment['amount']); ?></td>
+                                        <td><?php echo htmlspecialchars($investment['investment_type']); ?></td>
                                         <td><?php echo htmlspecialchars($investment['status']); ?></td>
+                                        <td>
+                                            <?php
+$investment_details = json_decode($investment['investment_details'], true);
+
+// Check if the data is an array and contains the necessary keys
+if (is_array($investment_details) && isset($investment_details[0]['name'], $investment_details[0]['hours'])) {
+    $name = htmlspecialchars($investment_details[0]['name']); // Get the name
+    $hours = htmlspecialchars($investment_details[0]['hours']); // Get the hours
+    echo "<span>Name: $name <br> Hours: $hours</span>"; // Display name and hours
+} else {
+    echo "<span>No valid data available</span>"; // Fallback if data is not as expected
+}
+                                            ?>
+                                        </td>
                                         <td><?php echo date('M d, Y', strtotime($investment['created_at'])); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
