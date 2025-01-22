@@ -275,71 +275,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ['jpg', 'jpeg', 'png', 'gif']
                 );
 
-                                    // Insert project data
-                $stmt = $conn->prepare("
-                INSERT INTO projects (
-                    builder_id,
-                    title,
-                    project_category,
-                    description,
-                    location,
-                    investment_goal,
-                    total_project_cost,
-                    projected_revenue,
-                    projected_profit,
-                    developer_info,
-                    investment_types,
-                    status,
-                    land_title_document,
-                    featured_image,
-                    verification_status,
-                    verification_fee_paid,
-                    current_stage
-                ) VALUES (
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-                )
-                ");
+                
+$stmt = $conn->prepare("
+INSERT INTO projects (
+    builder_id,
+    title,
+    project_category,
+    description,
+    location,
+    investment_goal,
+    total_project_cost,
+    projected_revenue,
+    projected_profit,
+    developer_info,
+    investment_types,
+    status,
+    land_title_document,
+    featured_image,
+    verification_status,
+    verification_fee_paid,
+    current_stage
+) VALUES (
+    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+)");
 
-                if (!$stmt) {
-                throw new Exception("Failed to prepare statement: " . $conn->error);
-                }
+if (!$stmt) {
+    throw new Exception("Failed to prepare statement: " . $conn->error);
+}
 
-                // Prepare all values
-                $status = 'pending';
-                $verification_status = 'unverified';
-                $verification_fee_paid = false;
-                $current_stage = 'planning';
+// Prepare all values
+$status = 'pending';
+$verification_status = 'unverified';
+$verification_fee_paid = 0;
+$current_stage = 'planning';
 
-                // Bind parameters with all 17 values
-                $stmt->bind_param(
-                "issssddddsssssssi",  // Updated type string to match 17 parameters
-                $user_id,
-                $title,
-                $project_category,
-                $description,
-                $location,
-                $investment_goal,
-                $total_project_cost,
-                $projected_revenue,
-                $projected_profit,
-                $developer_info,
-                $investment_types_json,
-                $status,
-                $land_title_document,
-                $featured_image,
-                $verification_status,
-                $verification_fee_paid,
-                $current_stage
-                );
+// Fix: Change the last 'i' to 's' in the type string
+$stmt->bind_param(
+    "issssddddssssssss",  // Changed last 'i' to 's'
+    $user_id,
+    $title,
+    $project_category,
+    $description,
+    $location,
+    $investment_goal,
+    $total_project_cost,
+    $projected_revenue,
+    $projected_profit,
+    $developer_info,
+    $investment_types_json,
+    $status,
+    $land_title_document,
+    $featured_image,
+    $verification_status,
+    $verification_fee_paid,
+    $current_stage
+);
 
-                // Execute the statement
-                if (!$stmt->execute()) {
-                throw new Exception("Failed to create project: " . $stmt->error);
-                }
-
-    
-
-
+// Execute the statement
+if (!$stmt->execute()) {
+    throw new Exception("Failed to create project: " . $stmt->error);
+}
 // After inserting the project and getting the project_id
 $project_id = $conn->insert_id;
 

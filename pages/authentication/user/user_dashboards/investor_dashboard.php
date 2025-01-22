@@ -30,13 +30,13 @@ $stmt->execute();
 $result = $stmt->get_result();
 $labor_stats = $result->fetch_assoc();
 
-// Fetch recent investments with project details
+ // Then use your existing query
 $stmt = $conn->prepare("SELECT 
-    i.*, p.title as project_title, p.status as project_status, p.verification_status
-    FROM investments i 
-    JOIN projects p ON i.project_id = p.id 
-    WHERE i.investor_id = ? 
-    ORDER BY i.created_at DESC LIMIT 5");
+i.*, p.title as project_title, p.status as project_status, p.verification_status
+FROM investments i 
+JOIN projects p ON i.project_id = p.id 
+WHERE i.investor_id = ? 
+ORDER BY i.created_at DESC LIMIT 5");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $recent_investments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -731,7 +731,7 @@ function savePreferences() {
     <!-- Recent Investments Table -->
     <div class="card mt-4">
     <div class="card-body">
-        <h5 class="card-title">Recent Accepted Investments</h5>
+        <h5 class="card-title">Recent  Investments</h5>
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -746,96 +746,166 @@ function savePreferences() {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (!empty($recent_investments)): ?>
-                        <?php foreach ($recent_investments as $investment): ?>
-                            <tr>
-                                <!-- Project Title -->
-                                <td><?php echo htmlspecialchars($investment['title']); ?></td>
-                                
-                                <!-- Investment Type -->
-                                <td><?php echo ucfirst(htmlspecialchars($investment['investment_type'])); ?></td>
-                                
-                                <!-- Investment Value -->
-                                <td>
-                                    <?php 
-                                    if ($investment['investment_type'] == 'cash') {
-                                        echo '₦' . number_format($investment['investment_value'], 2);
-                                    } elseif ($investment['investment_type'] == 'skill' || $investment['investment_type'] == 'service') {
-                                        echo number_format($investment['investment_value'], 1) . ' hours';
-                                    } else {
-                                        echo 'N/A';
-                                    }
-                                    ?>
-                                </td>
-                                
-                                <!-- Status -->
-                                <td>
-                                    <span class="badge bg-success">
-                                        <?php echo ucfirst(htmlspecialchars($investment['status'])); ?>
-                                    </span>
-                                </td>
-                                
-                                <!-- Date -->
-                                <td><?php echo date('M d, Y', strtotime($investment['created_at'])); ?></td>
-                                
-                                <!-- Certificate -->
-                                <td>
-                                    <?php if (!empty($investment['certificate_number'])): ?>
-                                        <span><?php echo htmlspecialchars($investment['certificate_number']); ?></span>
-                                    <?php else: ?>
-                                        <span class="text-muted">N/A</span>
-                                    <?php endif; ?>
-                                </td>
-                                
-                                <!-- Investment Details -->
-                                <td>
-                                    <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#investmentDetailsModal<?php echo $investment['project_id']; ?>">View Details</button>
-                                </td>
-                            </tr>
+    <?php 
+    // Get the current user's ID from session
+    $investor_id = $_SESSION['user_id'];
+    
+    // Fetch investments for this specific investor
+    $stmt = $conn->prepare("
+        SELECT 
+            i.id,
+            i.project_id,
+            i.investment_type,
+            i.amount as investment_value,
+            i.status,
+            i.created_at,
+            i.certificate_number,
+            i.investment_details,
+            p.title,
+            CASE 
+                WHEN i.investment_type IN ('skill', 'service') THEN i.hours
+                WHEN i.investment_type = 'materials' THEN i.quantity
+                ELSE i.amount
+            END as display_value
+        FROM investment_intentions i 
+        JOIN projects p ON i.project_id = p.id
+        WHERE i.investor_id = ?
+        ORDER BY i.created_at DESC"
+    );
+    $stmt->bind_param("i", $investor_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $investments = $result->fetch_all(MYSQLI_ASSOC);
+    ?>
 
-                            <!-- Modal for Viewing Investment Details -->
-                            <div class="modal fade" id="investmentDetailsModal<?php echo $investment['project_id']; ?>" tabindex="-1" aria-labelledby="investmentDetailsLabel<?php echo $investment['project_id']; ?>" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="investmentDetailsLabel<?php echo $investment['project_id']; ?>">Investment Details for <?php echo htmlspecialchars($investment['title']); ?></h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <p><strong>Investment Type:</strong> <?php echo ucfirst(htmlspecialchars($investment['investment_type'])); ?></p>
-                                            <p><strong>Investment Amount:</strong> 
-                                                <?php 
-                                                if ($investment['investment_type'] == 'cash') {
-                                                    echo '$' . number_format($investment['investment_value'], 2);
-                                                } elseif ($investment['investment_type'] == 'skill' || $investment['investment_type'] == 'service') {
-                                                    echo number_format($investment['investment_value'], 1) . ' hours';
-                                                } else {
-                                                    echo 'N/A';
-                                                }
-                                                ?>
-                                            </p>
-                                            <p><strong>Investment Details:</strong> <?php echo nl2br(htmlspecialchars($investment['investment_details'])); ?></p>
-                                            <?php if (!empty($investment['certificate_number'])): ?>
-                                                <p><strong>Certificate Number:</strong> <?php echo htmlspecialchars($investment['certificate_number']); ?></p>
-                                            <?php else: ?>
-                                                <p><strong>Certificate:</strong> Not Available</p>
-                                            <?php endif; ?>
-                                            <p><strong>Date of Investment:</strong> <?php echo date('M d, Y', strtotime($investment['created_at'])); ?></p>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        <?php endforeach; ?>
+    <?php if (!empty($investments)): ?>
+        <?php foreach ($investments as $investment): ?>
+            <tr>
+                <!-- Project Title -->
+                <td><?php echo htmlspecialchars($investment['title']); ?></td>
+                
+                <!-- Investment Type -->
+                <td><?php echo ucfirst(htmlspecialchars($investment['investment_type'])); ?></td>
+                
+                <!-- Investment Value -->
+                <td>
+                    <?php 
+                    switch($investment['investment_type']) {
+                        case 'cash':
+                            echo '₦' . number_format($investment['display_value'], 2);
+                            break;
+                        case 'skill':
+                        case 'service':
+                            echo number_format($investment['display_value'], 1) . ' hours';
+                            break;
+                        case 'materials':
+                            echo number_format($investment['display_value']) . ' units';
+                            break;
+                        default:
+                            echo 'N/A';
+                    }
+                    ?>
+                </td>
+                
+                <!-- Status -->
+                <td>
+                    <span class="badge <?php echo $investment['status'] === 'pending' ? 'bg-warning' : 'bg-success'; ?>">
+                        <?php echo ucfirst(htmlspecialchars($investment['status'])); ?>
+                    </span>
+                </td>
+                
+                <!-- Date -->
+                <td><?php echo date('M d, Y', strtotime($investment['created_at'])); ?></td>
+                
+                <!-- Certificate -->
+                <td>
+                    <?php if (!empty($investment['certificate_number'])): ?>
+                        <span><?php echo htmlspecialchars($investment['certificate_number']); ?></span>
                     <?php else: ?>
-                        <tr>
-                            <td colspan="7" class="text-center text-muted">No accepted investments found.</td>
-                        </tr>
+                        <span class="text-muted">N/A</span>
                     <?php endif; ?>
-                </tbody>
+                </td>
+                
+                <!-- Investment Details -->
+                <td>
+                    <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#investmentDetailsModal<?php echo $investment['id']; ?>">View Details</button>
+                </td>
+            </tr>
+
+            <!-- Modal for Viewing Investment Details -->
+            <div class="modal fade" id="investmentDetailsModal<?php echo $investment['id']; ?>" tabindex="-1" aria-labelledby="investmentDetailsLabel<?php echo $investment['id']; ?>" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="investmentDetailsLabel<?php echo $investment['id']; ?>">
+                                Investment Details for <?php echo htmlspecialchars($investment['title']); ?>
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p><strong>Investment Type:</strong> <?php echo ucfirst(htmlspecialchars($investment['investment_type'])); ?></p>
+                            <p><strong>Investment Value:</strong> 
+                                <?php 
+                                switch($investment['investment_type']) {
+                                    case 'cash':
+                                        echo '₦' . number_format($investment['display_value'], 2);
+                                        break;
+                                    case 'skill':
+                                    case 'service':
+                                        echo number_format($investment['display_value'], 1) . ' hours';
+                                        break;
+                                    case 'materials':
+                                        echo number_format($investment['display_value']) . ' units';
+                                        break;
+                                    default:
+                                        echo 'N/A';
+                                }
+                                ?>
+                            </p>
+                            <?php 
+                            $details = json_decode($investment['investment_details'], true);
+                            if ($details): 
+                            ?>
+                                <div class="investment-details">
+                                    <?php if ($investment['investment_type'] === 'cash'): ?>
+                                        <p><strong>Cash Amount:</strong> ₦<?php echo number_format($details['amount'], 2); ?></p>
+                                    <?php else: ?>
+                                        <?php if (isset($details['items']) && is_array($details['items'])): ?>
+                                            <p><strong>Selected Items:</strong></p>
+                                            <ul>
+                                                <?php foreach ($details['items'] as $item): ?>
+                                                    <li>
+                                                        <?php echo htmlspecialchars($item['name']); ?>
+                                                        <?php if (isset($item['total_hours'])): ?>
+                                                            (<?php echo $item['total_hours']; ?> hours)
+                                                        <?php elseif (isset($item['quantity'])): ?>
+                                                            (<?php echo $item['quantity'] . ' ' . $item['unit']; ?>)
+                                                        <?php endif; ?>
+                                                    </li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                            <?php if (!empty($investment['certificate_number'])): ?>
+                                <p><strong>Certificate Number:</strong> <?php echo htmlspecialchars($investment['certificate_number']); ?></p>
+                            <?php endif; ?>
+                            <p><strong>Date of Investment:</strong> <?php echo date('M d, Y', strtotime($investment['created_at'])); ?></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <tr>
+            <td colspan="7" class="text-center text-muted">No investments found.</td>
+        </tr>
+    <?php endif; ?>
+</tbody>
             </table>
         </div>
     </div>
@@ -1167,9 +1237,7 @@ function verifyProject() {
                 <div class="modal-body">
                     <div class="d-grid gap-2">
                         <button class="btn btn-primary btn-lg" onclick="showInvestmentModal('cash')">Cash Investment</button>
-                        <button class="btn btn-success btn-lg" onclick="showInvestmentModal('skill')">Skill Investment</button>
-                        <button class="btn btn-info btn-lg" onclick="showInvestmentModal('service')">Service Investment</button>
-
+                  
                         
 
 
@@ -1188,6 +1256,11 @@ function verifyProject() {
     // ##########################################################################################################################################
    // <button class="btn btn-success btn-lg" onclick="showInvestmentModal('skill')">Skill Investment</button>
      //               <button class="btn btn-info btn-lg" onclick="showInvestmentModal('service')">Service Investment</button>
+// _---------------------------------------------------------------
+
+    //  <button class="btn btn-success btn-lg" onclick="showInvestmentModal('skill')">Skill Investment</button>
+    //                     <button class="btn btn-info btn-lg" onclick="showInvestmentModal('service')">Service Investment</button>
+    //                     <button class="btn btn-warning btn-lg" onclick="showInvestmentModal('materials')">Building Materials Investment</button>
 
     // #####################################################################################################################################
 
@@ -1269,6 +1342,33 @@ function verifyProject() {
     </div>
     `;
 
+
+    const materialsInvestmentModal = `
+<div class="modal fade" id="materialsInvestmentModal" tabindex="-1" aria-labelledby="materialsInvestmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="materialsInvestmentModalLabel">Building Materials Investment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="availableMaterialsContainer">
+                    <!-- Materials will be dynamically populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="processMaterialInvestment()">Submit Material Investment</button>
+            </div>
+        </div>
+    </div>
+</div>
+`;
+
+// Append the materials investment modal to the body
+$('body').append(materialsInvestmentModal);
+
+
       // Append modals to body
       $('body').append(investmentTypeModal + cashInvestmentModal + skillInvestmentModal + serviceInvestmentModal);
 
@@ -1279,7 +1379,6 @@ investmentTypeModalInstance.show();
 
 
 }
-
 function showInvestmentModal(type) {
     // Close the investment type modal
     const investmentTypeModalInstance = bootstrap.Modal.getInstance(document.getElementById('investmentTypeModal'));
@@ -1307,6 +1406,38 @@ function showInvestmentModal(type) {
 
         const cashInvestmentModalInstance = new bootstrap.Modal(document.getElementById('cashInvestmentModal'));
         cashInvestmentModalInstance.show();
+    } else if (type === 'materials') {
+        // Fetch and populate available materials
+        $.ajax({
+            url: './ajax/get_available_materials.php',
+            method: 'POST',
+            data: { project_id: currentProject.id },
+            dataType: 'json',
+            success: function(data) {
+                let itemsHTML = '';
+                data.forEach(item => {
+                    itemsHTML += `
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" 
+                                   name="materials[]" 
+                                   value="${item.id}" 
+                                   id="material_${item.id}">
+                            <label class="form-check-label" for="material_${item.id}">
+                                ${item.material_name} (${item.quantity} ${item.unit})
+                            </label>
+                        </div>
+                    `;
+                });
+                $('#availableMaterialsContainer').html(itemsHTML);
+
+                const materialsInvestmentModalInstance = new bootstrap.Modal(document.getElementById('materialsInvestmentModal'));
+                materialsInvestmentModalInstance.show();
+            },
+            error: function(xhr, status, error) {
+                console.error(`Error fetching materials:`, error);
+                showNotification(`Failed to load available materials`, false);
+            }
+        });
     } else {
         // Determine URL and container based on type
         let url, containerId;
@@ -1356,6 +1487,7 @@ function showInvestmentModal(type) {
 }
 
 
+
 // Add this function to check user type
 function getUserType() {
     return new Promise((resolve, reject) => {
@@ -1372,56 +1504,47 @@ function getUserType() {
     });
 }
 
-// Modify the investment processing functions
 function processCashInvestment() {
-    getUserType().then(userType => {
-        if (userType == 'investor') {
-            showNotification("Only investors can make investments", false);
-            return;
-        }
-        const investmentAmount = parseFloat($('#investmentAmount').val());
-        const remainingInvestment = parseFloat($('#remainingInvestment').val());
-        const currentProject = window.currentSelectedProject;
+    const investmentAmount = parseFloat($('#investmentAmount').val());
+    const remainingInvestment = parseFloat($('#remainingInvestment').val());
+    const currentProject = window.currentSelectedProject;
 
-        if (isNaN(investmentAmount) || investmentAmount <= 0) {
-            showNotification("Please enter a valid investment amount", false);
-            return;
-        }
+    if (isNaN(investmentAmount) || investmentAmount <= 0) {
+        showNotification("Please enter a valid investment amount", false);
+        return;
+    }
 
-        if (investmentAmount > remainingInvestment) {
-            showNotification("Investment amount exceeds project needs", false);
-            return;
-        }
+    if (investmentAmount > remainingInvestment) {
+        showNotification("Investment amount exceeds project needs", false);
+        return;
+    }
 
-        $.ajax({
-            url: './ajax/process_investment_intention.php',
-            method: 'POST',
-            data: {
-                project_id: currentProject.id,
-                investment_type: 'cash',
-                amount: investmentAmount
-            },
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    showNotification("Investment intention submitted successfully! Awaiting developer approval.", true);
-                    const cashInvestmentModalInstance = bootstrap.Modal.getInstance(document.getElementById('cashInvestmentModal'));
-                    cashInvestmentModalInstance.hide();
-                } else {
-                    showNotification(response.message || "Failed to submit investment intention", false);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error("Error submitting investment intention:", error);
-                showNotification("Failed to submit investment intention", false);
+    $.ajax({
+        url: './ajax/process_investment_intention.php',
+        method: 'POST',
+        data: {
+            project_id: currentProject.id,
+            investment_type: 'cash',
+            amount: investmentAmount,
+            investment_details: JSON.stringify({ amount: investmentAmount }) // Include investment details
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                showNotification("Investment intention submitted successfully! Awaiting developer approval.", true);
+                const cashInvestmentModalInstance = bootstrap.Modal.getInstance(document.getElementById('cashInvestmentModal'));
+                cashInvestmentModalInstance.hide();
+            } else {
+                showNotification(response.message || "Failed to submit investment intention", false);
             }
-        });
-    }).catch(error => {
-        showNotification("Error verifying user type", false);
+        },
+        error: function(xhr, status, error) {
+            console.error("Error submitting investment intention:", error);
+            showNotification("Failed to submit investment intention", false);
+        }
     });
 }
 
-// Add get_user_type.php file
 function processSkillInvestment() {
     const selectedSkills = $('input[name="skills[]"]:checked').map(function() {
         return this.value;
@@ -1439,8 +1562,8 @@ function processSkillInvestment() {
         data: {
             project_id: currentProject.id,
             investment_type: 'skill',
-            investment_details: JSON.stringify(selectedSkills),
-            selected_skills: selectedSkills  // Add this line to pass selected skill IDs
+            investment_details: JSON.stringify(selectedSkills), // Send selected skills as investment details
+            selected_skills: selectedSkills
         },
         dataType: 'json',
         success: function(response) {
@@ -1476,8 +1599,8 @@ function processServiceInvestment() {
         data: {
             project_id: currentProject.id,
             investment_type: 'service',
-            investment_details: JSON.stringify(selectedServices),
-            selected_services: selectedServices  // Add this line to pass selected service IDs
+            investment_details: JSON.stringify(selectedServices), // Send selected services as investment details
+            selected_services: selectedServices
         },
         dataType: 'json',
         success: function(response) {
@@ -1495,5 +1618,42 @@ function processServiceInvestment() {
         }
     });
 }
+
+function processMaterialInvestment() {
+    const selectedMaterials = $('input[name="materials[]"]:checked').map(function() {
+        return this.value;
+    }).get();
+    const currentProject = window.currentSelectedProject;
+
+    if (selectedMaterials.length === 0) {
+        showNotification("Please select at least one material", false);
+        return;
+    }
+
+    $.ajax({
+        url: './ajax/process_investment_intention.php',
+        method: 'POST',
+        data: {
+            project_id: currentProject.id,
+            investment_type: 'materials',
+            investment_details: JSON.stringify(selectedMaterials) // Send selected materials as investment details
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                showNotification("Material investment intention submitted successfully! Awaiting developer approval.", true);
+                const materialsInvestmentModalInstance = bootstrap.Modal.getInstance(document.getElementById('materialsInvestmentModal'));
+                materialsInvestmentModalInstance.hide();
+            } else {
+                showNotification(response.message || "Failed to submit material investment intention", false);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("Error submitting material investment intention:", error);
+            showNotification("Failed to submit material investment intention", false);
+        }
+    });
+}
+
 
 </script>

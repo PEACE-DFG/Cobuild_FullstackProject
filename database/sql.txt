@@ -120,7 +120,11 @@ CREATE TABLE project_milestones (
 ALTER TABLE projects
 ADD COLUMN payment_reference VARCHAR(255);
 
--- Alter existing projects table to add new fields
+-- First add investment_goal
+ALTER TABLE projects
+ADD COLUMN investment_goal DECIMAL(15,2) AFTER title;
+
+-- Then add the remaining columns
 ALTER TABLE projects
 ADD COLUMN project_category VARCHAR(50) AFTER title,
 ADD COLUMN total_project_cost DECIMAL(15,2) AFTER investment_goal,
@@ -253,11 +257,22 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
     FOREIGN KEY (investor_id) REFERENCES investors(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+
+
+
 -- Data migration queries (to be run after creating new tables)
 INSERT INTO investors (user_id, name, email, phone, registration_date)
 SELECT id, name, email, phone_number, registration_date
 FROM users
 WHERE user_type = 'investor';
+
+
+
+
+ALTER TABLE investment_intentions
+ADD COLUMN investment_details VARCHAR(255);
+
+
 
 
 -- Modify the existing investor_preferences table
@@ -327,3 +342,97 @@ CREATE TABLE project_skills (
     total_hours DECIMAL(10,2),
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
+
+
+
+
+ALTER TABLE projects
+ADD COLUMN current_stage ENUM('planning');
+
+
+
+
+
+
+ALTER TABLE projects
+MODIFY COLUMN verification_fee_paid INT DEFAULT 0;
+
+
+
+
+
+-- Modify the existing columns as needed
+
+-- Modify investment_goal to ensure it exists with correct type
+ALTER TABLE projects
+MODIFY COLUMN investment_goal DECIMAL(15,2);
+
+-- Modify project_category to ensure it exists with correct type
+ALTER TABLE projects
+MODIFY COLUMN project_category VARCHAR(50);
+
+-- Modify total_project_cost to ensure it exists with correct type
+ALTER TABLE projects
+MODIFY COLUMN total_project_cost DECIMAL(15,2);
+
+-- Modify featured_image to ensure it exists with correct type
+ALTER TABLE projects
+MODIFY COLUMN featured_image VARCHAR(255);
+
+-- Modify projected_revenue to ensure it exists with correct type
+ALTER TABLE projects
+MODIFY COLUMN projected_revenue DECIMAL(15,2);
+
+-- Modify projected_profit to ensure it exists with correct type
+ALTER TABLE projects
+MODIFY COLUMN projected_profit DECIMAL(15,2);
+
+-- Modify building_materials to ensure it exists with correct type
+ALTER TABLE projects
+MODIFY COLUMN building_materials TEXT;
+
+-- Modify developer_info to ensure it exists with correct type
+ALTER TABLE projects
+MODIFY COLUMN developer_info TEXT;
+
+-- Modify investment_types to ensure it exists with correct type
+ALTER TABLE projects
+MODIFY COLUMN investment_types JSON;
+
+-- Modify current_investment_amount to ensure it exists with a default value
+ALTER TABLE projects
+MODIFY COLUMN current_investment_amount DECIMAL(15,2) DEFAULT 0.00;
+
+-- Modify current_stage to ensure it exists with correct type
+ALTER TABLE projects
+MODIFY COLUMN current_stage ENUM('planning');
+
+
+
+
+ALTER TABLE investment_intentions
+ADD COLUMN amount DECIMAL(15,2);
+
+
+
+ALTER TABLE investment_intentions
+ADD COLUMN user_id INT;  -- Adjust data type as needed
+
+
+
+
+
+ALTER TABLE projects
+ADD COLUMN created_at DATETIME;  -- Adjust data type as needed
+
+
+
+
+
+ALTER TABLE investment_intentions
+ADD COLUMN certificate_number VARCHAR(255);  -- Adjust data type as needed
+
+
+
+ALTER TABLE investment_intentions
+ADD COLUMN hours INT;  -- Adjust data type as needed
