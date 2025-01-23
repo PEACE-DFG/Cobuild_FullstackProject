@@ -921,78 +921,99 @@ new Chart(distributionCtx, {
         labels: [
             'Total Projects Involved',
             'Total Investments',
-            'Total Cash Invested'
         ],
         datasets: [{
             data: [
                 <?php echo json_encode($investment_stats['total_projects'], JSON_NUMERIC_CHECK); ?>, 
                 <?php echo json_encode($investment_stats['total_investments'], JSON_NUMERIC_CHECK); ?>, 
-                <?php echo json_encode($investment_stats['total_cash_invested'], JSON_NUMERIC_CHECK); ?>
             ],
-            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
-            hoverBackgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
+            backgroundColor: ['#FF6384', '#36A2EB'],
+            hoverBackgroundColor: ['#FF6384', '#36A2EB']
         }]
     },
     options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'bottom',
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Investment Distribution'
+                }
             },
-            title: {
-                display: true,
-                text: 'Investment Type Distribution'
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Investment Metrics'
+                    }
+                }
             }
         }
-    }
 });
-
 
 // Monthly Trends Chart
-const trendsCtx = document.getElementById('monthlyTrendsChart').getContext('2d');
-new Chart(trendsCtx, {
-    type: 'line', // Changed to bar chart
-    data: {
-        labels: ['Total Projects', 'Total Investments', 'Total Cash Invested'], // Labels for the categories
-        datasets: [{
-            label: 'Investment Statistics',
-            data: [
-                <?php echo json_encode($investment_stats['total_projects'], JSON_NUMERIC_CHECK); ?>,
-                <?php echo json_encode($investment_stats['total_investments'], JSON_NUMERIC_CHECK); ?>,
-                <?php echo json_encode($investment_stats['total_cash_invested'], JSON_NUMERIC_CHECK); ?>
-            ], // Data values
-            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'], // Colors for each bar
-            hoverBackgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'], // Hover colors
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                display: false, // No legend since we have only one dataset
-            },
-            title: {
-                display: true,
-                text: 'Investment Summary'
-            }
+const trendsCanvas = document.getElementById('monthlyTrendsChart');
+if (trendsCanvas) {
+    const trendsCtx = trendsCanvas.getContext('2d');
+    
+    // Log the data to verify
+    console.log('Total Cash Invested:', 
+        <?php echo json_encode($investment_stats['total_cash_invested'] ?? 0, JSON_NUMERIC_CHECK); ?>
+    );
+
+    new Chart(trendsCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Total Cash Invested'], // Fixed labels
+            datasets: [{
+                label: 'Total Cash Invested',
+                data: [
+                    <?php echo json_encode($investment_stats['total_cash_invested'] ?? 0, JSON_NUMERIC_CHECK); ?>
+                ],
+                backgroundColor: ['#FFCE56'],
+                hoverBackgroundColor: ['#FFCE56']
+            }]
         },
-        scales: {
-            y: {
-                beginAtZero: true,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
                 title: {
                     display: true,
-                    text: 'Value'
+                    text: 'Total Cash Invested'
                 }
             },
-            x: {
-                title: {
-                    display: true,
-                    text: 'Investment Metrics'
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Value (NGN)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Investment Metrics'
+                    }
                 }
             }
         }
-    }
-});
+    });
+} else {
+    console.error('Canvas element not found');
+}
 
 
 
@@ -1237,7 +1258,11 @@ function verifyProject() {
                 <div class="modal-body">
                     <div class="d-grid gap-2">
                         <button class="btn btn-primary btn-lg" onclick="showInvestmentModal('cash')">Cash Investment</button>
-                  
+                        <span><i>The functionalities below is coming soon,Join the waitlist</i></span>
+                         <button class="btn btn-success btn-lg" onclick="showInvestmentModal('skill')" disabled>Skill Investment</button>
+                         <button class="btn btn-info btn-lg" onclick="showInvestmentModal('service')" disabled>Service Investment</button>
+                         <button class="btn btn-warning btn-lg" onclick="showInvestmentModal('materials')" disabled>Building Materials Investment</button>
+
                         
 
 
@@ -1256,8 +1281,6 @@ function verifyProject() {
     // ##########################################################################################################################################
    // <button class="btn btn-success btn-lg" onclick="showInvestmentModal('skill')">Skill Investment</button>
      //               <button class="btn btn-info btn-lg" onclick="showInvestmentModal('service')">Service Investment</button>
-// _---------------------------------------------------------------
-
     //  <button class="btn btn-success btn-lg" onclick="showInvestmentModal('skill')">Skill Investment</button>
     //                     <button class="btn btn-info btn-lg" onclick="showInvestmentModal('service')">Service Investment</button>
     //                     <button class="btn btn-warning btn-lg" onclick="showInvestmentModal('materials')">Building Materials Investment</button>

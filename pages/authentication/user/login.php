@@ -223,7 +223,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action'])) {
 
             // Update password
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $updateStmt = $conn->prepare("UPDATE users SET password = ?, reset_code = NULL, reset_code_expiry = NULL WHERE email = ?");
+            $updateStmt = $conn->prepare("UPDATE users SET password = ?, reset_code = 0, reset_code_expiry = NULL WHERE email = ?");
             $updateStmt->bind_param("ss", $hashedPassword, $email);
             
             if (!$updateStmt->execute()) {

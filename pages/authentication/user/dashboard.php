@@ -198,25 +198,33 @@ ob_end_flush();
 
         let displayText = '';
 
+        // Safe parsing function
+        const safeParseJson = (jsonString) => {
+            try {
+                return JSON.parse(jsonString || '[]');
+            } catch (error) {
+                console.error('JSON parsing error:', error);
+                return [];
+            }
+        };
+
         switch (message.investment_type) {
             case 'cash':
                 displayText = `Investment Amount: NGN ${message.amount}`;
                 break;
 
             case 'service':
-                // Parse and format service details
-                const services = JSON.parse(message.investment_details || '[]');
-                displayText = services.map(service => 
+                const services = safeParseJson(message.investment_details);
+                displayText = Array.isArray(services) ? services.map(service => 
                     `<span class="service-item"><strong>${service.name}</strong>: ${service.hours} hours</span>`
-                ).join('<br>');
+                ).join('<br>') : 'No services provided';
                 break;
 
             case 'skill':
-                // Parse and format skill details
-                const skills = JSON.parse(message.investment_details || '[]');
-                displayText = skills.map(skill => 
+                const skills = safeParseJson(message.investment_details);
+                displayText = Array.isArray(skills) ? skills.map(skill => 
                     `<span class="skill-item"><strong>${skill.name}</strong>: ${skill.hours} hours</span>`
-                ).join('<br>');
+                ).join('<br>') : 'No skills provided';
                 break;
 
             default:
