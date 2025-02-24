@@ -371,6 +371,7 @@ if (isset($_SESSION['user_id'])) {
                 </ul>
             </div>
         </div>
+				
     </div>
 </nav>
 

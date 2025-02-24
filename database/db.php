@@ -1,9 +1,9 @@
 <?php
 // Database connection settings
 $host = 'localhost';        // Server host (could be localhost or server IP)
-$db_name = 'cobuild';       // Database name
-$username = 'root';         // MySQL username (use a secure one in production)
-$password = '';             // MySQL password (set accordingly)
+$db_name = 'ogadxeqy_cobuild';       // Database name
+$username = 'ogadxeqy_usercobuild';         // MySQL username (use a secure one in production)
+$password = 'usercobuild2025';        // MySQL password (set accordingly)
 $charset = 'utf8mb4';       // Character set for compatibility with different languages
 
 // Enable error reporting for debugging in development
